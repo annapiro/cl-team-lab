@@ -1,11 +1,12 @@
 # class that represents a single instance of a restaurant
 # has attributes name, gold label, predicted label, category, location, and menu
+# TODO implement the possibility to read/set predicted labels
 
 class Restaurant:
     def __init__(self, features: list):
         self.name = features[1]
         self.gold_label = Restaurant.encode_label(features[0])
-        self.pred_label = ''
+        self.pred_label = ''  # TODO
         self.category = features[2]
         self.location = features[3]
         self.menu = features[4].split(";")
