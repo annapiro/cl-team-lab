@@ -28,3 +28,9 @@ class Restaurant:
         :return: integer representing the label
         """
         return len(label)
+
+# set predicted labels
+    def set_predicted_label(self, pred_label):
+        self.pred_label = pred_label
+        
+    
