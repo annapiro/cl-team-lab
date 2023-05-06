@@ -23,14 +23,19 @@ class Restaurant:
     def encode_label(label: str) -> int:
         """
         Simple method to map string-based labels to number-based ones
+        If the label is already a number, it is simply returned as an integer
         TODO not sure if this encoding is good, maybe revisit it
-        :param label: label in the form of a string $, $$, $$$, or $$$$
+        :param label: label in the form of a string $, $$, $$$, or $$$$, or a number
         :return: integer representing the label
         """
-        return len(label)
+        return int(label) if label.isdigit() else len(label)
 
 # set predicted labels
-    def set_predicted_label(self, pred_label):
+    def set_predicted_label(self, pred_label: int):
         self.pred_label = pred_label
         
-    
+
+# testing
+if __name__ == "__main__":
+    print(Restaurant.encode_label("2"))
+    print(Restaurant.encode_label("$$$"))
