@@ -22,6 +22,19 @@ class Corpus:
                 out.append(Restaurant(line))
         return out
 
+    def pred_from_file(self, filepath: str):
+        """
+        Read predicted labels for the corpus from file
+        :param filepath: path to the file containing one predicted label per line
+        """
+        with open(filepath) as f:
+            labels = [Restaurant.encode_label(line.strip()) for line in f]
+        if len(labels) != len(self.instances):
+            print("Number of predicted labels doesn't match the number of instances in the corpus. No labels were set")
+            return
+        for inst, pred in zip(self.instances, labels):
+            inst.set_predicted_label(pred)
+
 
 # for testing
 if __name__ == "__main__":
