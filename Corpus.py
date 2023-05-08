@@ -35,6 +35,16 @@ class Corpus:
         for inst, pred in zip(self.instances, labels):
             inst.set_predicted_label(pred)
 
+    def extract_features(self):
+        """
+        TODO store resulting features as an instance variable
+        Probably each of these should be its own function?
+        - extract features from food type (one-hot encoding)
+        - extract features from location (one-hot encoding)
+        - extract features from menu items (bag-of-words?)
+        - extract features from restaurant name (how? haven't decided)
+        """
+
     @staticmethod
     def tokenize(text: str) -> list:
         """
