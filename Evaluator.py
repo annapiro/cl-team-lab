@@ -1,5 +1,6 @@
- from Corpus import Corpus
 # class that implements various evaluation methods for a corpus
+from Corpus import Corpus
+
 
 class Evaluator:
     # The constructor initializes the Evaluator with a Corpus object.
@@ -99,8 +100,8 @@ class Evaluator:
         y_pred = [instance.pred_label for instance in self.corpus.instances]
 
         # Compute the confusion matrix, precision, recall, and F1 scores.
-        confusion_matrix = create_confusion_matrix(y_true, y_pred)
-        precision, recall = precision_recall(confusion_matrix)
+        confusion_matrix = self.create_confusion_matrix(y_true, y_pred)
+        precision, recall = self.precision_recall(confusion_matrix)
         f1, macro_avg_f1 = f1_score(precision, recall)
 
         # Return the macro-average F1 score.
@@ -117,13 +118,14 @@ class Evaluator:
         y_pred_ranked = rank_data(y_pred)
 
         # Calculate the squared rank differences between the ranked gold (true) labels and predicted labels.
-        squared_differences = squared_rank_differences(y_true_ranked, y_pred_ranked)
+        squared_differences = self.squared_rank_differences(y_true_ranked, y_pred_ranked)
 
         # Compute Spearman's rank correlation coefficient using the ranked gold (true) labels, predicted labels, and squared rank differences.
-        correlation = spearman_correlation(y_true_ranked, y_pred_ranked, squared_differences)
+        correlation = self.spearman_correlation(y_true_ranked, y_pred_ranked, squared_differences)
 
         # Return Spearman's rank correlation coefficient.
         return correlation
+
 
 # For testing
 if __name__ == "__main__":
