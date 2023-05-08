@@ -1,3 +1,4 @@
+ from Corpus import Corpus
 # class that implements various evaluation methods for a corpus
 
 class Evaluator:
@@ -5,8 +6,7 @@ class Evaluator:
     def __init__(self, corpus):
         self.corpus = corpus
 
-        @staticmethod
-    def create_confusion_matrix(y_true, y_pred):
+    def create_confusion_matrix(self, y_true, y_pred):
         # Get the number of unique labels in the true labels
         n_labels = len(set(y_true))
         # Initialize an n_labels x n_labels matrix with all elements set to 0
@@ -19,8 +19,7 @@ class Evaluator:
 
         return matrix
 
-    @staticmethod
-    def precision_recall(confusion_matrix):
+    def precision_recall(self, confusion_matrix):
         # Get the number of unique labels in the confusion matrix
         n_labels = len(confusion_matrix)
         # Initialize precision and recall lists with n_labels elements set to 0
@@ -47,8 +46,7 @@ class Evaluator:
 
         return precision, recall
 
-    @staticmethod
-    def f1_score(precision, recall):
+    def f1_score(self, precision, recall):
         # Get the number of labels from the precision list
         n_labels = len(precision)
         # Initialize the F1-score list with n_labels elements set to 0
@@ -67,8 +65,7 @@ class Evaluator:
 
         return f1, macro_avg_f1
 
-    @staticmethod
-    def rank_data(data):
+    def rank_data(self, data):
         # Sort the data in ascending order
         sorted_data = sorted(data)
         # Initialize a dictionary to store the ranks
@@ -80,13 +77,12 @@ class Evaluator:
         # Return the ranks for the original data
         return [ranks[val] for val in data]
 
-    @staticmethod
-    def squared_rank_differences(y_true_ranked, y_pred_ranked):
+    def squared_rank_differences(self, y_true_ranked, y_pred_ranked):
         # Calculate the squared differences between the true and predicted ranks
         return [(y_true_ranked[i] - y_pred_ranked[i]) ** 2 for i in range(len(y_true_ranked))]
 
-    @staticmethod
-    def spearman_correlation(y_true_ranked, y_pred_ranked, squared_differences):
+
+    def spearman_correlation(self, y_true_ranked, y_pred_ranked, squared_differences):
         # Calculate the number of elements in the ranked data
         n = len(y_true_ranked)
         # Calculate the numerator of the Spearman correlation formula
