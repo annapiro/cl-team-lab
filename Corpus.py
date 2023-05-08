@@ -35,6 +35,16 @@ class Corpus:
         for inst, pred in zip(self.instances, labels):
             inst.set_predicted_label(pred)
 
+    @staticmethod
+    def tokenize(text: str) -> list:
+        """
+        Split a string into tokens
+        TODO stub - maybe implement fancier tokenization
+        :param text: string to be tokenized
+        :return: list of strings where each element is a token
+        """
+        return text.split()
+
 
 # for testing
 if __name__ == "__main__":
