@@ -114,8 +114,8 @@ class Evaluator:
         y_pred = [instance.pred_label for instance in self.corpus.instances]
 
         # Compute the ranked gold (true) labels and predicted labels.
-        y_true_ranked = rank_data(y_true)
-        y_pred_ranked = rank_data(y_pred)
+        y_true_ranked = self.rank_data(y_true)
+        y_pred_ranked = self.rank_data(y_pred)
 
         # Calculate the squared rank differences between the ranked gold (true) labels and predicted labels.
         squared_differences = self.squared_rank_differences(y_true_ranked, y_pred_ranked)
