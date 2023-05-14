@@ -10,6 +10,7 @@ class Restaurant:
         self.category = features[2]
         self.location = features[3]
         self.menu = features[4].split(";")
+        self.features = {}  # this will store our features
 
     def __repr__(self):
         """

@@ -1,11 +1,13 @@
 # class that represents the whole corpus of restaurants
 from Restaurant import Restaurant
+import string
 
 
 class Corpus:
     def __init__(self, filepath: str):
         # this is for storing the list of restaurants
         self.instances = Corpus.read_file(filepath)
+        self.build_dictionaries()
 
     @staticmethod
     def read_file(filepath: str) -> list:
@@ -35,26 +37,40 @@ class Corpus:
         for inst, pred in zip(self.instances, labels):
             inst.set_predicted_label(pred)
 
-    def extract_features(self):
-        """
-        TODO store resulting features as an instance variable
-        Probably each of these should be its own function?
-        - extract features from food type (one-hot encoding)
-        - extract features from location (one-hot encoding)
-        - extract features from menu items (bag-of-words?)
-        - extract features from restaurant name (how? haven't decided)
-        """
-
     @staticmethod
     def tokenize(text: str) -> list:
         """
-        Split a string into tokens
-        TODO stub - maybe implement fancier tokenization
+        Split a string into tokens. Make it case-insensitive and able to handle punctuation.
         :param text: string to be tokenized
         :return: list of strings where each element is a token
         """
+        text = text.lower()  # make it case-insensitive
+        text = text.translate(str.maketrans('', '', string.punctuation))  # remove punctuation
         return text.split()
 
+    def build_dictionaries(self):
+        """
+        Create dictionaries that map each unique category, location, and menu item to a unique integer.
+        """
+        self.categories = {category: i for i, category in enumerate(set([restaurant.category for restaurant in self.instances]))}
+        self.locations = {location: i for i, location in enumerate(set([restaurant.location for restaurant in self.instances]))}
+        self.menu_items = {item: i for i, item in enumerate(set([item for restaurant in self.instances for item in restaurant.menu]))}
+
+    def extract_features(self):
+        """
+        Store resulting features as an instance variable.
+        Each restaurant will be represented as a dictionary where the keys are the feature names (location, food type, menu items)
+        and the values are dictionaries where the keys are the indices of non-zero elements and the values are the non-zero values.
+        """
+        for restaurant in self.instances:
+            features = {}
+            # One-hot encoding for location
+            features['location'] = {self.locations[restaurant.location]: 1}
+            # One-hot encoding for food type
+            features['food_type'] = {self.categories[restaurant.category]: 1}
+            # Bag of words for menu items
+            features['menu'] = {self.menu_items[item]: 1 for item in restaurant.menu if item in self.menu_items}
+            restaurant.features = features
 
 # for testing
 if __name__ == "__main__":
