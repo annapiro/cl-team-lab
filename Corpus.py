@@ -50,16 +50,17 @@ class Corpus:
 
     def build_dictionaries(self):
         """
-        Create dictionaries that map each unique category, location, and menu item to a unique integer.
+        Create dictionaries that map each unique category, location, menu item, and restaurant name token to a unique integer.
         """
         self.categories = {category: i for i, category in enumerate(set([restaurant.category for restaurant in self.instances]))}
         self.locations = {location: i for i, location in enumerate(set([restaurant.location for restaurant in self.instances]))}
         self.menu_items = {item: i for i, item in enumerate(set([item for restaurant in self.instances for item in restaurant.menu]))}
+        self.restaurant_name_tokens = {token: i for i, token in enumerate(set([token for restaurant in self.instances for token in self.tokenize(restaurant.name)]))}
 
     def extract_features(self):
         """
         Store resulting features as an instance variable.
-        Each restaurant will be represented as a dictionary where the keys are the feature names (location, food type, menu items)
+        Each restaurant will be represented as a dictionary where the keys are the feature names (location, food type, menu items, restaurant name)
         and the values are dictionaries where the keys are the indices of non-zero elements and the values are the non-zero values.
         """
         for restaurant in self.instances:
@@ -72,7 +73,7 @@ class Corpus:
             features['menu'] = {self.menu_items[item]: 1 for item in restaurant.menu if item in self.menu_items}
             # Bag of words for restaurant name
             name_tokens = self.tokenize(restaurant.name)
-            features['name'] = {self.menu_items[word]: 1 for word in name_tokens if word in self.menu_items}
+            features['name'] = {self.restaurant_name_tokens[token]: 1 for token in name_tokens if token in self.restaurant_name_tokens}
             restaurant.features = features
 
 # for testing
