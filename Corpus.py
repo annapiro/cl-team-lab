@@ -70,6 +70,9 @@ class Corpus:
             features['food_type'] = {self.categories[restaurant.category]: 1}
             # Bag of words for menu items
             features['menu'] = {self.menu_items[item]: 1 for item in restaurant.menu if item in self.menu_items}
+            # Bag of words for restaurant name
+            name_tokens = self.tokenize(restaurant.name)
+            features['name'] = {self.menu_items[word]: 1 for word in name_tokens if word in self.menu_items}
             restaurant.features = features
 
 # for testing
