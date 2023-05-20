@@ -4,6 +4,7 @@ from Perceptron import Perceptron
 from Corpus import Corpus
 from Restaurant import Restaurant
 from Evaluator import Evaluator
+from tqdm import tqdm
 
 if __name__ == "__main__":
     EPOCHS = 10  # Define the number of training iterations
@@ -12,10 +13,10 @@ if __name__ == "__main__":
     corpus = Corpus("data/menu_train.txt")
 
     # Extract features
-    corpus.extract_features()
+    # corpus.extract_features()
 
     # Build the dictionaries
-    corpus.build_dictionaries()
+    # corpus.build_dictionaries()
 
     # Get the number of features
     num_features = len(corpus.menu_tokens) + len(corpus.food_types) + len(corpus.locations) + len(corpus.name_tokens)
@@ -24,15 +25,19 @@ if __name__ == "__main__":
     perceptrons = [Perceptron(num_features, i) for i in range(1, 5)]  # Assuming 4 price categories
 
     # Train perceptrons
-    for epoch in range(EPOCHS):
+    for epoch in tqdm(range(EPOCHS)):
         # Shuffle instances
         random.shuffle(corpus.instances)
         # Train each perceptron
-        for restaurant in corpus.instances:
-            for perceptron in perceptrons:
+        for perceptron in tqdm(perceptrons):
+            for restaurant in corpus.instances:
                 # Get the combined feature vector from all feature dictionaries
-                combined_features = list(itertools.chain(*restaurant.features.values()))
-                perceptron.update(combined_features, restaurant.gold_label)
+                # combined_features = list(itertools.chain(*restaurant.features.values()))
+                # perceptron.update(combined_features, restaurant.gold_label)
+
+                # Get dense features of the restaurant
+                dense_features = corpus.get_dense_features(restaurant)
+                perceptron.update(dense_features, restaurant.gold_label)
                 
     # Evaluate perceptrons
     y_true = []
