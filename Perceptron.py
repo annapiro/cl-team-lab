@@ -1,6 +1,5 @@
 # Perceptron algorithm with a binary approach
 # Each price category is treated as one class and all other categories are treated as another class
-# TODO perceptron should receive already decoded features, probably implement decoding in Corpus
 # TODO handle OOV tokens
 # TODO note: no need to binarize
 # TODO should this class contain a method to print the predictions to a file?
@@ -9,30 +8,29 @@ import math
 
 
 class Perceptron:
-    def __init__(self, num_features, tar_label, lr=0.1):
+    def __init__(self, num_features: int, tar_label: int, lr: float = 0.1):
         # Initialize weights and bias
         self.weights = self._initialize_weights(num_features)
         self.bias = 0
         self.LR = lr  # learning rate
         self.tar_label = tar_label  # target label that this perceptron is trained to predict
 
-    def predict(self, features, activate=True):
+    def predict(self, features: list, activate=True) -> int | float:
         """
-        TODO docs
-        :param features:
-        :param activate:
-        :return:
+        Predicts the class of a single instance based on its features
+        :param features: List of encoded features
+        :param activate: Whether the output should be activated
+        :return: Binary result (1 or 0) if activated, raw score otherwise
         """
         # Compute the dot product of features and weights, and add bias
         score = sum(x*w for x, w in zip(features, self.weights)) + self.bias
         return self._activation(score) if activate else score
 
-    def update(self, features, y_true):
+    def update(self, features: list, y_true: int):
         """
-        TODO docs
-        :param features:
+        Updates the weights based on the prediction for one instance
+        :param features: List of encoded features
         :param y_true: True label in the original format (not binarized)
-        :return:
         """
         # Compute the prediction
         y_pred = self.predict(features, activate=True)
@@ -43,36 +41,37 @@ class Perceptron:
                 self.weights[i] += self._error(y_true, y_pred) * features[i]
             self.bias += self._error(y_true, y_pred)
 
-    def _activation(self, score):
+    def _activation(self, score: float) -> int:
         """
-        Return 1 if score is positive, else 0
-        :param score: TODO docs
-        :return:
+        Activation function that converts raw score to class prediction
+        :param score: Raw prediction score
+        :return: 1 if score is positive, else 0
         """
         return 1 if score > 0 else 0
 
-    def _error(self, y_true, y_pred):
+    def _error(self, y_true: int | float, y_pred: int | float) -> int | float:
         """
-        TODO docs
-        :param y_true:
-        :param y_pred:
-        :return:
+        Error function calculates the error between true label and predicted label/score
+        :param y_true: True label
+        :param y_pred: Predicted label or score
+        :return: Error
         """
         return y_true - y_pred
 
-    def _initialize_weights(self, num_features):
+    def _initialize_weights(self, num_features: int) -> list:
         """
         TODO random weight initialization
-        :param num_features: TODO docs
-        :return:
+        :param num_features: Number of features per instance
+        :return: List of initialized weights
         """
         return [0] * num_features
 
-    def _binarize_label(self, label):
+    def _binarize_label(self, label: int) -> int:
         """
-        TODO docs
-        :param label:
-        :return:
+        Convert class label from multiclass representation to a binary label,
+        in accordance with the class that this perceptron is trained to predict
+        :param label: Original label
+        :return: Binary label
         """
         return int(label == self.tar_label)
 
