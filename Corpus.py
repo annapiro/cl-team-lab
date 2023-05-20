@@ -7,7 +7,16 @@ class Corpus:
     def __init__(self, filepath: str):
         # this is for storing the list of restaurants
         self.instances = Corpus.read_file(filepath)
+
+        # initialize feature dictionaries
+        self.name_tokens = dict()
+        self.food_types = dict()
+        self.locations = dict()
+        self.menu_tokens = dict()
+
+        # extract features
         self.build_dictionaries()
+        self.extract_features()
 
     @staticmethod
     def read_file(filepath: str) -> list:
@@ -76,7 +85,35 @@ class Corpus:
             features['name'] = {self.name_tokens[token]: 1 for token in name_tokens if token in self.name_tokens}
             restaurant.features = features
 
+    def get_dense_features(self, instance: Restaurant) -> list:
+        """
+        Converts sparse feature representation of a single Restaurant instance
+        to decoded dense representation
+        :param instance: Restaurant instance
+        :return: Dense feature representation as a list
+        """
+        enc_name = instance.features['name']
+        enc_food_type = instance.features['food_type']
+        enc_location = instance.features['location']
+        enc_menu = instance.features['menu']
+
+        def _decode(feat_dict: dict, reference: dict):
+            out = [0 for _ in range(len(reference))]
+            for idx in feat_dict:
+                out[idx] = feat_dict[idx]
+            return out
+
+        dec_name = _decode(enc_name, self.name_tokens)
+        dec_food_type = _decode(enc_food_type, self.food_types)
+        dec_location = _decode(enc_location, self.locations)
+        dec_menu = _decode(enc_menu, self.menu_tokens)
+
+        return dec_name + dec_food_type + dec_location + dec_menu
+
+
 # for testing
 if __name__ == "__main__":
     test = Corpus("data/menu_train.txt")
-    print(test.instances)
+    test_inst = test.instances[10]
+    decoded = test.get_dense_features(test_inst)
+    print('done!')
