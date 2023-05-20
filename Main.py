@@ -18,7 +18,7 @@ if __name__ == "__main__":
     corpus.build_dictionaries()
 
     # Get the number of features
-    num_features = len(corpus.menu_items) + len(corpus.categories) + len(corpus.locations) + len(corpus.restaurant_name_tokens)
+    num_features = len(corpus.menu_tokens) + len(corpus.food_types) + len(corpus.locations) + len(corpus.name_tokens)
 
     # Initialize perceptron for each class
     perceptrons = [Perceptron(num_features, i) for i in range(1, 5)]  # Assuming 4 price categories
