@@ -37,9 +37,10 @@ class Perceptron:
         y_true = self._binarize_label(y_true)
         # Update weights and bias if prediction is incorrect
         if y_pred != y_true:
+            error = self._error(y_true, y_pred)
             for i in range(len(self.weights)):
-                self.weights[i] += self._error(y_true, y_pred) * features[i]
-            self.bias += self._error(y_true, y_pred)
+                self.weights[i] += error * features[i]
+            self.bias += error
 
     def _activation(self, score: float) -> int:
         """
