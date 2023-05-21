@@ -24,37 +24,52 @@ if __name__ == "__main__":
     # Initialize perceptron for each class
     perceptrons = [Perceptron(num_features, i) for i in range(1, 5)]  # Assuming 4 price categories
 
-    # Train perceptrons
+    # Train perceptrons and make predictions
     for epoch in tqdm(range(EPOCHS)):
         # Shuffle instances
         random.shuffle(corpus.instances)
         # Train each perceptron
         for perceptron in tqdm(perceptrons):
             for restaurant in corpus.instances:
-                # Get the combined feature vector from all feature dictionaries
-                # combined_features = list(itertools.chain(*restaurant.features.values()))
-                # perceptron.update(combined_features, restaurant.gold_label)
-
                 # Get dense features of the restaurant
                 dense_features = corpus.get_dense_features(restaurant)
                 perceptron.update(dense_features, restaurant.gold_label)
-                
+
+                # Make predictions
+                combined_features = list(itertools.chain(*restaurant.features.values()))
+                predictions = [perceptron.predict(combined_features) for perceptron in perceptrons]
+                # Get the predicted class (1-indexed)
+                predicted_class = predictions.index(max(predictions)) + 1
+                # Set the predicted label
+                restaurant.set_predicted_label(predicted_class)
+
     # Evaluate perceptrons
     y_true = []
     y_pred = []
     for restaurant in corpus.instances:
-        combined_features = list(itertools.chain(*restaurant.features.values()))
-        # Get predictions from all perceptrons
-        predictions = [perceptron.predict(combined_features) for perceptron in perceptrons]
-        # Get the predicted class (1-indexed)
-        predicted_class = predictions.index(max(predictions)) + 1
+        # Check if gold_label and predicted_label are not None
+        if restaurant.gold_label is None:
+            print(f"Gold label for restaurant {restaurant.name} is None.")
+            continue
+        if restaurant.pred_label is None:
+            print(f"Predicted label for restaurant {restaurant.name} is None.")
+            continue
+
         y_true.append(restaurant.gold_label)
-        y_pred.append(predicted_class)
-        
+        y_pred.append(restaurant.pred_label)
+
+    # For testing if the labels are assigned correctly
+    # corpus.print_labels()
+
+
     # Set up evaluator
     evaluator = Evaluator(corpus)
-    f1_score = evaluator.evaluate_f1_score()
-    correlation = evaluator.evaluate_correlation()
+    
+    if len(set(y_true)) == 1 or len(set(y_pred)) == 1:
+        print("Insufficient variation in the data to calculate correlation.")
+    else:
+        correlation = evaluator.evaluate_correlation()
+        print(f"Spearman's Rank Correlation Coefficient: {correlation:.2f}")
 
+    f1_score = evaluator.evaluate_f1_score()
     print(f"Macro Average F1 Score: {f1_score:.2f}")
-    print(f"Spearman's Rank Correlation Coefficient: {correlation:.2f}")

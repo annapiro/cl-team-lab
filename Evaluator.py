@@ -9,10 +9,10 @@ class Evaluator:
 
     def create_confusion_matrix(self, y_true, y_pred):
         # Get the number of unique labels in the true labels
-        n_labels = len(set(y_true))
+        n_labels = max(max(y_true), max(y_pred))
         # Initialize an n_labels x n_labels matrix with all elements set to 0
         matrix = [[0] * n_labels for _ in range(n_labels)]
-
+    
         # Iterate through the true and predicted labels
         for true, pred in zip(y_true, y_pred):
             # Increment the corresponding cell in the confusion matrix
@@ -86,6 +86,8 @@ class Evaluator:
     def spearman_correlation(self, y_true_ranked, y_pred_ranked, squared_differences):
         # Calculate the number of elements in the ranked data
         n = len(y_true_ranked)
+        if n <= 1:
+            raise ValueError("Insufficient data to calculate Spearman's correlation.")
         # Calculate the numerator of the Spearman correlation formula
         numerator = 6 * sum(squared_differences)
         # Calculate the denominator of the Spearman correlation formula
@@ -102,7 +104,7 @@ class Evaluator:
         # Compute the confusion matrix, precision, recall, and F1 scores.
         confusion_matrix = self.create_confusion_matrix(y_true, y_pred)
         precision, recall = self.precision_recall(confusion_matrix)
-        f1, macro_avg_f1 = f1_score(precision, recall)
+        f1, macro_avg_f1 = self.f1_score(precision, recall)
 
         # Return the macro-average F1 score.
         return macro_avg_f1
@@ -125,7 +127,6 @@ class Evaluator:
 
         # Return Spearman's rank correlation coefficient.
         return correlation
-
 
 # For testing
 if __name__ == "__main__":

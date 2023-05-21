@@ -20,17 +20,16 @@ class Corpus:
 
     @staticmethod
     def read_file(filepath: str) -> list:
-        """
-        Read a file containing one restaurant instance per line
-        :param filepath: path to the data file
-        :return: List of Restaurant instances
-        """
         out = []
         with open(filepath) as f:
             for line in f:
                 line = line.strip().split("\t")
                 # append a new instance of Restaurant to the list
-                out.append(Restaurant(line))
+                instance = Restaurant(line)
+                if instance.gold_label is None:
+                    print(f"Warning: Invalid gold label for restaurant {instance.name}. Skipping this instance.")
+                    continue  # Skip this instance
+                out.append(instance)
         return out
 
     def pred_from_file(self, filepath: str):
@@ -110,6 +109,15 @@ class Corpus:
 
         return dec_name + dec_food_type + dec_location + dec_menu
 
+    def print_labels(self):
+        """
+        Prints the gold (true) label and predicted label for each instance in the corpus.
+        """
+        for instance in self.instances:
+            print(f"Restaurant: {instance.name}")
+            print(f"Gold Label: {instance.gold_label}")
+            print(f"Predicted Label: {instance.pred_label}")
+            print("-"*30)  # prints a divider for clarity
 
 # for testing
 if __name__ == "__main__":
