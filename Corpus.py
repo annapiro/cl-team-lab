@@ -20,6 +20,11 @@ class Corpus:
 
     @staticmethod
     def read_file(filepath: str) -> list:
+        """
+        Read a file containing one restaurant instance per line
+        :param filepath: path to the data file
+        :return: List of Restaurant instances
+        """
         out = []
         with open(filepath) as f:
             for line in f:
@@ -77,6 +82,7 @@ class Corpus:
             features['location'] = {self.locations[restaurant.location]: 1}
             # One-hot encoding for food type
             features['food_type'] = {self.food_types[restaurant.category]: 1}
+            # TODO what if there are multiples of the same token?
             # Bag of words for menu items
             features['menu'] = {self.menu_tokens[item]: 1 for item in restaurant.menu if item in self.menu_tokens}
             # Bag of words for restaurant name
@@ -118,6 +124,7 @@ class Corpus:
             print(f"Gold Label: {instance.gold_label}")
             print(f"Predicted Label: {instance.pred_label}")
             print("-"*30)  # prints a divider for clarity
+
 
 # for testing
 if __name__ == "__main__":
