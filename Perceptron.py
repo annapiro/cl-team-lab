@@ -15,7 +15,7 @@ class Perceptron:
         self.LR = lr  # learning rate
         self.tar_label = tar_label  # target label that this perceptron is trained to predict
 
-    def predict(self, features: list, activate=True) -> int | float:
+    def predict(self, features: list, activate=False) -> int | float:
         """
         Predicts the class of a single instance based on its features
         :param features: List of encoded features
