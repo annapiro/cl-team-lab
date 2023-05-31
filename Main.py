@@ -35,13 +35,14 @@ if __name__ == "__main__":
                 dense_features = corpus.get_dense_features(restaurant)
                 perceptron.update(dense_features, restaurant.gold_label)
 
-                # Make predictions
-                combined_features = list(itertools.chain(*restaurant.features.values()))
-                predictions = [perceptron.predict(combined_features) for perceptron in perceptrons]
-                # Get the predicted class (1-indexed)
-                predicted_class = predictions.index(max(predictions)) + 1
-                # Set the predicted label
-                restaurant.set_predicted_label(predicted_class)
+    # Make predictions
+    for restaurant in corpus.instances:
+        dense_features = corpus.get_dense_features(restaurant)
+        predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
+        # Get the predicted class (1-indexed)
+        predicted_class = predictions.index(max(predictions)) + 1
+        # Set the predicted label
+        restaurant.set_predicted_label(predicted_class)
 
     # Evaluate perceptrons
     y_true = []
@@ -60,7 +61,6 @@ if __name__ == "__main__":
 
     # For testing if the labels are assigned correctly
     # corpus.print_labels()
-
 
     # Set up evaluator
     evaluator = Evaluator(corpus)
