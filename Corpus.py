@@ -4,9 +4,12 @@ import string
 
 
 class Corpus:
-    def __init__(self, filepath: str):
-        # this is for storing the list of restaurants
-        self.instances = Corpus.read_file(filepath)
+    def __init__(self, train_data: list, test_data: list = None):
+        # list of instances that will be used for training
+        self.train_data = train_data
+        # list of instances that will be used for testing
+        # can be added later via set_test_data
+        self.test_data = test_data if test_data else None
 
         # initialize feature dictionaries
         self.name_tokens = dict()
@@ -16,7 +19,9 @@ class Corpus:
 
         # extract features
         self.build_dictionaries()
-        self.extract_features()
+        self.extract_features(self.train_data)
+        if self.test_data:
+            self.extract_features(self.test_data)
 
     @staticmethod
     def read_file(filepath: str) -> list:
@@ -37,6 +42,14 @@ class Corpus:
                 out.append(instance)
         return out
 
+    def set_test_data(self, test_data: list):
+        """
+        Set test instances for the corpus and extract their features
+        :param test_data: List of test instances
+        """
+        self.test_data = test_data
+        self.extract_features(self.test_data)
+
     def pred_from_file(self, filepath: str):
         """
         Read predicted labels for the corpus from file
@@ -44,10 +57,10 @@ class Corpus:
         """
         with open(filepath) as f:
             labels = [Restaurant.encode_label(line.strip()) for line in f]
-        if len(labels) != len(self.instances):
+        if len(labels) != len(self.train_data):
             print("Number of predicted labels doesn't match the number of instances in the corpus. No labels were set")
             return
-        for inst, pred in zip(self.instances, labels):
+        for inst, pred in zip(self.train_data, labels):
             inst.set_predicted_label(pred)
 
     @staticmethod
@@ -64,26 +77,36 @@ class Corpus:
     def build_dictionaries(self):
         """
         Create dictionaries that map each unique category, location, menu item, and restaurant name token to a unique integer.
+        Dictionaries are built only based on the features in the training data
         """
-        self.food_types = {category: i for i, category in enumerate(set([restaurant.category for restaurant in self.instances]))}
-        self.locations = {location: i for i, location in enumerate(set([restaurant.location for restaurant in self.instances]))}
-        self.menu_tokens = {item: i for i, item in enumerate(set([item for restaurant in self.instances for item in restaurant.menu]))}
-        self.name_tokens = {token: i for i, token in enumerate(set([token for restaurant in self.instances for token in self.tokenize(restaurant.name)]))}
+        self.food_types = {category: i for i, category in enumerate(set([restaurant.category for restaurant in self.train_data]))}
+        self.locations = {location: i for i, location in enumerate(set([restaurant.location for restaurant in self.train_data]))}
+        self.menu_tokens = {item: i for i, item in enumerate(set([item for restaurant in self.train_data for item in restaurant.menu]))}
+        self.name_tokens = {token: i for i, token in enumerate(set([token for restaurant in self.train_data for token in self.tokenize(restaurant.name)]))}
 
-    def extract_features(self):
+    def extract_features(self, instances: list):
         """
         Store resulting features as an instance variable.
         Each restaurant will be represented as a dictionary where the keys are the feature names (location, food type, menu items, restaurant name)
         and the values are dictionaries where the keys are the indices of non-zero elements and the values are the non-zero values.
+        :param instances: Features will be extracted for each instance on the list
+        and stored in the corresponding object
         """
-        for restaurant in self.instances:
+        for restaurant in instances:
             features = {}
             # One-hot encoding for location
-            features['location'] = {self.locations[restaurant.location]: 1}
+            # create empty dictionary if location is OOV
+            features['location'] = {self.locations[restaurant.location]: 1} \
+                if restaurant.location in self.locations \
+                else {}
             # One-hot encoding for food type
-            features['food_type'] = {self.food_types[restaurant.category]: 1}
+            # create empty dictionary if restaurant category (food type) is OOV
+            features['food_type'] = {self.food_types[restaurant.category]: 1} \
+                if restaurant.category in self.food_types \
+                else {}
             # TODO what if there are multiples of the same token?
             # Bag of words for menu items
+            # TODO needs to be properly tokenized
             features['menu'] = {self.menu_tokens[item]: 1 for item in restaurant.menu if item in self.menu_tokens}
             # Bag of words for restaurant name
             name_tokens = self.tokenize(restaurant.name)
@@ -119,7 +142,7 @@ class Corpus:
         """
         Prints the gold (true) label and predicted label for each instance in the corpus.
         """
-        for instance in self.instances:
+        for instance in self.train_data:
             print(f"Restaurant: {instance.name}")
             print(f"Gold Label: {instance.gold_label}")
             print(f"Predicted Label: {instance.pred_label}")
@@ -128,7 +151,8 @@ class Corpus:
 
 # for testing
 if __name__ == "__main__":
-    test = Corpus("data/menu_train.txt")
-    test_inst = test.instances[10]
+    data = Corpus.read_file("data/menu_train.txt")
+    test = Corpus(data)
+    test_inst = test.train_data[10]
     decoded = test.get_dense_features(test_inst)
     print('done!')

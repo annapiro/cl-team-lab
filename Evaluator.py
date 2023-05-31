@@ -5,7 +5,9 @@ from Corpus import Corpus
 class Evaluator:
     # The constructor initializes the Evaluator with a Corpus object.
     def __init__(self, corpus):
-        self.corpus = corpus
+        # evaluate on the test data if it's available in the corpus
+        # otherwise evaluate on the train data (for debug etc)
+        self.test_data = corpus.test_data if corpus.test_data else corpus.train_data
 
     def create_confusion_matrix(self, y_true, y_pred):
         # Get the number of unique labels in the true labels
@@ -98,8 +100,8 @@ class Evaluator:
     # This method calculates the macro-average F1 score for the model.
     def evaluate_f1_score(self):
         # Extract the gold (true) labels and predicted labels from the Corpus instances.
-        y_true = [instance.gold_label for instance in self.corpus.instances]
-        y_pred = [instance.pred_label for instance in self.corpus.instances]
+        y_true = [instance.gold_label for instance in self.test_data]
+        y_pred = [instance.pred_label for instance in self.test_data]
 
         # Compute the confusion matrix, precision, recall, and F1 scores.
         confusion_matrix = self.create_confusion_matrix(y_true, y_pred)
@@ -112,8 +114,8 @@ class Evaluator:
     # This method calculates Spearman's rank correlation coefficient for the model.
     def evaluate_correlation(self):
         # Extract the gold (true) labels and predicted labels from the Corpus instances.
-        y_true = [instance.gold_label for instance in self.corpus.instances]
-        y_pred = [instance.pred_label for instance in self.corpus.instances]
+        y_true = [instance.gold_label for instance in self.test_data]
+        y_pred = [instance.pred_label for instance in self.test_data]
 
         # Compute the ranked gold (true) labels and predicted labels.
         y_true_ranked = self.rank_data(y_true)
@@ -130,11 +132,12 @@ class Evaluator:
 
 # For testing
 if __name__ == "__main__":
-    test_corpus = Corpus("data/menu_train.txt")
+    data = Corpus.read_file("data/menu_train.txt")
+    test_corpus = Corpus(data)
 
     # Set predicted labels for the instances in the corpus
     # TODO: This should be replaced  with the  actual prediction code
-    for instance in test_corpus.instances:
+    for instance in test_corpus.train_data:
         instance.set_predicted_label(instance.gold_label)  # For now, set the predicted label to the gold label
 
     evaluator = Evaluator(test_corpus)

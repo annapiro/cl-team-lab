@@ -10,7 +10,11 @@ if __name__ == "__main__":
     EPOCHS = 10  # Define the number of training iterations
 
     # Load corpus
-    corpus = Corpus("data/menu_train.txt")
+    data = Corpus.read_file("data/menu_train.txt")
+    split = int(len(data) / 5)
+    dev, train = data[:split], data[split:]
+    corpus = Corpus(train)
+    corpus.set_test_data(dev)
 
     # Extract features
     # corpus.extract_features()
@@ -27,16 +31,16 @@ if __name__ == "__main__":
     # Train perceptrons and make predictions
     for epoch in tqdm(range(EPOCHS)):
         # Shuffle instances
-        random.shuffle(corpus.instances)
+        random.shuffle(corpus.train_data)
         # Train each perceptron
         for perceptron in tqdm(perceptrons):
-            for restaurant in corpus.instances:
+            for restaurant in corpus.train_data:
                 # Get dense features of the restaurant
                 dense_features = corpus.get_dense_features(restaurant)
                 perceptron.update(dense_features, restaurant.gold_label)
 
     # Make predictions
-    for restaurant in corpus.instances:
+    for restaurant in corpus.test_data:
         dense_features = corpus.get_dense_features(restaurant)
         predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
         # Get the predicted class (1-indexed)
@@ -47,7 +51,7 @@ if __name__ == "__main__":
     # Evaluate perceptrons
     y_true = []
     y_pred = []
-    for restaurant in corpus.instances:
+    for restaurant in corpus.test_data:
         # Check if gold_label and predicted_label are not None
         if restaurant.gold_label is None:
             print(f"Gold label for restaurant {restaurant.name} is None.")
