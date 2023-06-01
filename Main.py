@@ -11,42 +11,37 @@ if __name__ == "__main__":
 
     # Load corpus
     data = Corpus.read_file("data/menu_train.txt")
-    split = int(len(data) / 5)
-    dev, train = data[:split], data[split:]
-    corpus = Corpus(train)
-    corpus.set_test_data(dev)
+    # Cross-validation
+    K = 5  # number of splits for cross-validation
+    fold_size = len(data) // K
+    f1_scores = []
+    correlations = []
 
-    # Extract features
-    # corpus.extract_features()
+    for i in range(K):
+        dev = data[i*fold_size: (i+1)*fold_size]
+        train = data[:i*fold_size] + data[(i+1)*fold_size:]
+        corpus = Corpus(train)
+        corpus.set_test_data(dev)
 
-    # Build the dictionaries
-    # corpus.build_dictionaries()
+        # Get the number of features
+        num_features = len(corpus.menu_tokens) + len(corpus.food_types) + len(corpus.locations) # + len(corpus.name_tokens)
 
-    # Get the number of features
-    num_features = len(corpus.menu_tokens) + len(corpus.food_types) + len(corpus.locations) + len(corpus.name_tokens)
+        # Initialize perceptron for each class
+        perceptrons = [Perceptron(num_features, i) for i in range(1, 5)]  # Assuming 4 price categories
 
-    # Initialize perceptron for each class
-    perceptrons = [Perceptron(num_features, i) for i in range(1, 5)]  # Assuming 4 price categories
-
-    # Train perceptrons and make predictions
-    for epoch in tqdm(range(EPOCHS)):
-        # Shuffle instances
-        random.shuffle(corpus.train_data)
-        # Train each perceptron
+        # Train perceptrons
+        train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
         for perceptron in tqdm(perceptrons):
-            for restaurant in corpus.train_data:
-                # Get dense features of the restaurant
-                dense_features = corpus.get_dense_features(restaurant)
-                perceptron.update(dense_features, restaurant.gold_label)
+            perceptron.train(train_data, EPOCHS)
 
-    # Make predictions
-    for restaurant in corpus.test_data:
-        dense_features = corpus.get_dense_features(restaurant)
-        predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
-        # Get the predicted class (1-indexed)
-        predicted_class = predictions.index(max(predictions)) + 1
-        # Set the predicted label
-        restaurant.set_predicted_label(predicted_class)
+        # Make predictions
+        for restaurant in corpus.test_data:
+            dense_features = corpus.get_dense_features(restaurant)
+            predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
+            # Get the predicted class (1-indexed)
+            predicted_class = predictions.index(max(predictions)) + 1
+            # Set the predicted label
+            restaurant.set_predicted_label(predicted_class)
 
     # Evaluate perceptrons
     y_true = []

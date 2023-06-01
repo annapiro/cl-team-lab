@@ -81,7 +81,7 @@ class Corpus:
         """
         self.food_types = {category: i for i, category in enumerate(set([restaurant.category for restaurant in self.train_data]))}
         self.locations = {location: i for i, location in enumerate(set([restaurant.location for restaurant in self.train_data]))}
-        self.menu_tokens = {item: i for i, item in enumerate(set([item for restaurant in self.train_data for item in restaurant.menu]))}
+        self.menu_tokens = {token: i for i, token in enumerate(set([token for restaurant in self.train_data for item in restaurant.menu for token in self.tokenize(item)]))}
         self.name_tokens = {token: i for i, token in enumerate(set([token for restaurant in self.train_data for token in self.tokenize(restaurant.name)]))}
 
     def extract_features(self, instances: list):
@@ -95,22 +95,18 @@ class Corpus:
         for restaurant in instances:
             features = {}
             # One-hot encoding for location
-            # create empty dictionary if location is OOV
             features['location'] = {self.locations[restaurant.location]: 1} \
                 if restaurant.location in self.locations \
                 else {}
             # One-hot encoding for food type
-            # create empty dictionary if restaurant category (food type) is OOV
             features['food_type'] = {self.food_types[restaurant.category]: 1} \
                 if restaurant.category in self.food_types \
                 else {}
-            # TODO what if there are multiples of the same token?
-            # Bag of words for menu items
-            # TODO needs to be properly tokenized
-            features['menu'] = {self.menu_tokens[item]: 1 for item in restaurant.menu if item in self.menu_tokens}
+            # Bag of words for menu items, now tokenizing each item
+            features['menu'] = {self.menu_tokens[token]: 1 for item in restaurant.menu for token in self.tokenize(item) if token in self.menu_tokens}
             # Bag of words for restaurant name
-            name_tokens = self.tokenize(restaurant.name)
-            features['name'] = {self.name_tokens[token]: 1 for token in name_tokens if token in self.name_tokens}
+            # name_tokens = self.tokenize(restaurant.name)
+            # features['name'] = {self.name_tokens[token]: 1 for token in name_tokens if token in self.name_tokens}
             restaurant.features = features
 
     def get_dense_features(self, instance: Restaurant) -> list:
@@ -120,7 +116,7 @@ class Corpus:
         :param instance: Restaurant instance
         :return: Dense feature representation as a list
         """
-        enc_name = instance.features['name']
+        # enc_name = instance.features['name']
         enc_food_type = instance.features['food_type']
         enc_location = instance.features['location']
         enc_menu = instance.features['menu']
@@ -131,12 +127,12 @@ class Corpus:
                 out[idx] = feat_dict[idx]
             return out
 
-        dec_name = _decode(enc_name, self.name_tokens)
+        # dec_name = _decode(enc_name, self.name_tokens)
         dec_food_type = _decode(enc_food_type, self.food_types)
         dec_location = _decode(enc_location, self.locations)
         dec_menu = _decode(enc_menu, self.menu_tokens)
 
-        return dec_name + dec_food_type + dec_location + dec_menu
+        return dec_food_type + dec_location + dec_menu#  + dec_name
 
     def print_labels(self):
         """

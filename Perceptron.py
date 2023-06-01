@@ -15,6 +15,12 @@ class Perceptron:
         self.LR = lr  # learning rate
         self.tar_label = tar_label  # target label that this perceptron is trained to predict
 
+    def train(self, train_data, epochs):
+        for epoch in range(1, epochs + 1):
+            random.shuffle(train_data)
+            for feats, label in train_data:
+                self.update(feats, label)
+
     def predict(self, features: list, activate=False) -> int | float:
         """
         Predicts the class of a single instance based on its features
@@ -75,6 +81,7 @@ class Perceptron:
         :return: Binary label
         """
         return int(label == self.tar_label)
+
 
 
 if __name__ == "__main__":
