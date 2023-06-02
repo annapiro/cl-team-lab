@@ -7,15 +7,17 @@ from Evaluator import Evaluator
 from tqdm import tqdm
 
 if __name__ == "__main__":
-    EPOCHS = 2  # Define the number of training iterations
+    EPOCHS = 10  # Define the number of training iterations
 
     # Load corpus
-    data = Corpus.read_file("data/menu_train_500.txt")
+    data = Corpus.read_file("data/menu_train.txt")
     # Cross-validation
     K = 5  # number of splits for cross-validation
     fold_size = len(data) // K
     f1_scores = []
     correlations = []
+
+    random.shuffle(data)
 
     for i in range(K):
         dev = data[i*fold_size: (i+1)*fold_size]
