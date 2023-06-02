@@ -7,10 +7,10 @@ from Evaluator import Evaluator
 from tqdm import tqdm
 
 if __name__ == "__main__":
-    EPOCHS = 10  # Define the number of training iterations
+    EPOCHS = 2  # Define the number of training iterations
 
     # Load corpus
-    data = Corpus.read_file("data/menu_train.txt")
+    data = Corpus.read_file("data/menu_train_500.txt")
     # Cross-validation
     K = 5  # number of splits for cross-validation
     fold_size = len(data) // K
@@ -20,11 +20,11 @@ if __name__ == "__main__":
     for i in range(K):
         dev = data[i*fold_size: (i+1)*fold_size]
         train = data[:i*fold_size] + data[(i+1)*fold_size:]
-        corpus = Corpus(train)
+        corpus = Corpus(train, exclude_feats=['name'])
         corpus.set_test_data(dev)
 
         # Get the number of features
-        num_features = len(corpus.menu_tokens) + len(corpus.food_types) + len(corpus.locations) # + len(corpus.name_tokens)
+        num_features = corpus.num_feats
 
         # Initialize perceptron for each class
         perceptrons = [Perceptron(num_features, i) for i in range(1, 5)]  # Assuming 4 price categories
