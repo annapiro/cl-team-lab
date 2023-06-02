@@ -1,6 +1,5 @@
 # Perceptron algorithm with a binary approach
 # Each price category is treated as one class and all other categories are treated as another class
-# TODO handle OOV tokens
 # TODO note: no need to binarize
 # TODO should this class contain a method to print the predictions to a file?
 import random
@@ -15,7 +14,12 @@ class Perceptron:
         self.LR = lr  # learning rate
         self.tar_label = tar_label  # target label that this perceptron is trained to predict
 
-    def train(self, train_data, epochs):
+    def train(self, train_data: list, epochs: int):
+        """
+        Trains the perceptron for a specified nuber of epochs
+        :param train_data: Training data
+        :param epochs: Number of epochs
+        """
         for epoch in range(1, epochs + 1):
             random.shuffle(train_data)
             for feats, label in train_data:
@@ -81,7 +85,6 @@ class Perceptron:
         :return: Binary label
         """
         return int(label == self.tar_label)
-
 
 
 if __name__ == "__main__":
