@@ -13,8 +13,9 @@ class Corpus:
 
         # default features that will be extracted in the corpus
         self.toggle_feats = {'name': 1, 'type': 1, 'loc': 1, 'menu': 1}
-        for toggle in exclude_feats:
-            self.toggle_feats[toggle] = 0
+        if exclude_feats:
+            for toggle in exclude_feats:
+                self.toggle_feats[toggle] = 0
 
         # initialize feature dictionaries
         self.name_tokens = dict()
@@ -27,6 +28,12 @@ class Corpus:
         self.extract_features(self.train_data)
         if self.test_data:
             self.extract_features(self.test_data)
+
+        # find maximum values in the training data to use in normalization
+        self.max_menu_count = max({x for rest in self.train_data for x in rest.features['menu'].values()}) \
+            if self.toggle_feats['menu'] else 1
+        self.max_name_count = max({x for rest in self.train_data for x in rest.features['name'].values()}) \
+            if self.toggle_feats['name'] else 1
 
         # store the length of the feature vector of each instance in the corpus
         self.num_feats = len(self.menu_tokens) + len(self.food_types) + len(self.locations) + len(self.name_tokens)
@@ -116,6 +123,31 @@ class Corpus:
             features['food_type'] = {self.food_types[restaurant.category]: 1} \
                 if self.toggle_feats['type'] and restaurant.category in self.food_types \
                 else {}
+            # Bag of words for menu items, now counting each item
+            if self.toggle_feats['menu']:
+                features['menu'] = {}
+                for item in restaurant.menu:
+                    for token in self.tokenize(item):
+                        if token in self.menu_tokens:
+                            if self.menu_tokens[token] in features['menu']:
+                                features['menu'][self.menu_tokens[token]] += 1
+                            else:
+                                features['menu'][self.menu_tokens[token]] = 1
+            else:
+                features['menu'] = {}
+            """
+            # Bag of words for restaurant name, now counting each token
+            if self.toggle_feats['name']:
+                features['name'] = {}
+                for token in self.tokenize(restaurant.name):
+                    if token in self.name_tokens:
+                        if self.name_tokens[token] in features['name']:
+                            features['name'][self.name_tokens[token]] += 1
+                        else:
+                            features['name'][self.name_tokens[token]] = 1
+            else:
+                features['name'] = {}
+            """
             # Bag of words for menu items, now tokenizing each item
             features['menu'] = {self.menu_tokens[token]: 1 for item in restaurant.menu for token in self.tokenize(item) if token in self.menu_tokens} \
                 if self.toggle_feats['menu'] \
@@ -128,10 +160,11 @@ class Corpus:
                 features['name'] = {}
             restaurant.features = features
 
-    def get_dense_features(self, instance: Restaurant) -> list:
+    def get_dense_features(self, instance: Restaurant, normalize=False) -> list:
         """
         Converts sparse feature representation of a single Restaurant instance
         to decoded dense representation
+        :param normalize: Choose whether the bag of words counts should be normalized (doesn't apply to binary BOW)
         :param instance: Restaurant instance
         :return: Dense feature representation as a list
         """
@@ -150,6 +183,10 @@ class Corpus:
         dec_food_type = _decode(enc_food_type, self.food_types)
         dec_location = _decode(enc_location, self.locations)
         dec_menu = _decode(enc_menu, self.menu_tokens)
+
+        if normalize:
+            dec_name = [round(x/self.max_name_count, 5) for x in dec_name]
+            dec_menu = [round(x/self.max_menu_count, 5) for x in dec_menu]
 
         return dec_food_type + dec_location + dec_menu + dec_name
 

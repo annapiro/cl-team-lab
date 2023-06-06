@@ -1,6 +1,5 @@
 # Perceptron algorithm with a binary approach
 # Each price category is treated as one class and all other categories are treated as another class
-# TODO note: no need to binarize
 # TODO should this class contain a method to print the predictions to a file?
 import random
 import math
@@ -16,7 +15,7 @@ class Perceptron:
 
     def train(self, train_data: list, epochs: int):
         """
-        Trains the perceptron for a specified nuber of epochs
+        Trains the perceptron for a specified number of epochs
         :param train_data: Training data
         :param epochs: Number of epochs
         """

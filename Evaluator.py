@@ -84,7 +84,6 @@ class Evaluator:
         # Calculate the squared differences between the true and predicted ranks
         return [(y_true_ranked[i] - y_pred_ranked[i]) ** 2 for i in range(len(y_true_ranked))]
 
-
     def spearman_correlation(self, y_true_ranked, y_pred_ranked, squared_differences):
         # Calculate the number of elements in the ranked data
         n = len(y_true_ranked)
@@ -129,6 +128,7 @@ class Evaluator:
 
         # Return Spearman's rank correlation coefficient.
         return correlation
+
 
 # For testing
 if __name__ == "__main__":

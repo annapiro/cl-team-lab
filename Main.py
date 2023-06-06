@@ -1,8 +1,6 @@
-import itertools
 import random
 from Perceptron import Perceptron
 from Corpus import Corpus
-from Restaurant import Restaurant
 from Evaluator import Evaluator
 from tqdm import tqdm
 
@@ -11,12 +9,32 @@ if __name__ == "__main__":
 
     # Load corpus
     data = Corpus.read_file("data/menu_train.txt")
+    dev = Corpus.read_file("data/menu_dev.txt")
+
+    corpus = Corpus(data, test_data=dev, exclude_feats=['type', 'loc'])
+
+    # Initialize perceptron for each class
+    perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
+
+    train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
+    for perceptron in tqdm(perceptrons):
+        perceptron.train(train_data, EPOCHS)
+
+    # Make predictions
+    for restaurant in corpus.test_data:
+        dense_features = corpus.get_dense_features(restaurant)
+        predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
+        # Get the predicted class (1-indexed)
+        predicted_class = predictions.index(max(predictions)) + 1
+        # Set the predicted label
+        restaurant.set_predicted_label(predicted_class)
+
     # Cross-validation
     K = 5  # number of splits for cross-validation
     fold_size = len(data) // K
     f1_scores = []
     correlations = []
-
+    """
     random.shuffle(data)
 
     for i in range(K):
@@ -44,6 +62,7 @@ if __name__ == "__main__":
             predicted_class = predictions.index(max(predictions)) + 1
             # Set the predicted label
             restaurant.set_predicted_label(predicted_class)
+    """
 
     # Evaluate perceptrons
     y_true = []
