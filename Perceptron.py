@@ -7,7 +7,7 @@ import math
 
 
 class Perceptron:
-    def __init__(self, num_features: int, tar_label: int, lr: float = 0.1):
+    def __init__(self, num_features: int, tar_label: int, lr: float = 1.0):
         # Initialize weights and bias
         self.weights = self._initialize_weights(num_features)
         self.bias = 0

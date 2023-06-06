@@ -7,7 +7,7 @@ from Evaluator import Evaluator
 from tqdm import tqdm
 
 if __name__ == "__main__":
-    EPOCHS = 10  # Define the number of training iterations
+    EPOCHS = 5  # Define the number of training iterations
 
     # Load corpus
     data = Corpus.read_file("data/menu_train.txt")
@@ -70,7 +70,13 @@ if __name__ == "__main__":
         print("Insufficient variation in the data to calculate correlation.")
     else:
         correlation = evaluator.evaluate_correlation()
-        print(f"Spearman's Rank Correlation Coefficient: {correlation:.2f}")
+        correlations.append(correlation)
 
     f1_score = evaluator.evaluate_f1_score()
-    print(f"Macro Average F1 Score: {f1_score:.2f}")
+    f1_scores.append(f1_score)
+
+average_f1_score = sum(f1_scores) / len(f1_scores)
+average_correlation = sum(correlations) / len(correlations)
+
+print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
+print(f"Average Correlation across all folds: {average_correlation:.2f}")
