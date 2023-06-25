@@ -1,7 +1,13 @@
 # class that represents the whole corpus of restaurants
 from Restaurant import Restaurant
 import string
+import nltk
+from nltk.stem import WordNetLemmatizer 
+from nltk.corpus import stopwords
 
+# Use NLTK library for advanced tokenization and text processing
+lemmatizer = WordNetLemmatizer()
+stop_words = set(stopwords.words('english'))
 
 class Corpus:
     def __init__(self, train_data: list, test_data: list = None, exclude_feats: list = None):
@@ -81,13 +87,16 @@ class Corpus:
     @staticmethod
     def tokenize(text: str) -> list:
         """
+        25/06: Marina added NLTK improvements.
         Split a string into tokens. Make it case-insensitive and able to handle punctuation.
+        Improved tokenizer with lemmatization and stop word removal.
         :param text: string to be tokenized
         :return: list of strings where each element is a token
         """
         text = text.lower()  # make it case-insensitive
         text = text.translate(str.maketrans('', '', string.punctuation))  # remove punctuation
-        return text.split()
+        tokens = nltk.word_tokenize(text)
+        return [lemmatizer.lemmatize(token) for token in tokens if token not in stop_words]
 
     def build_dictionaries(self):
         """
