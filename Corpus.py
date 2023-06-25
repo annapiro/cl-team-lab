@@ -1,9 +1,16 @@
 # class that represents the whole corpus of restaurants
 from Restaurant import Restaurant
 import string
+import torch
 import nltk
 from nltk.stem import WordNetLemmatizer 
 from nltk.corpus import stopwords
+from transformers import BertTokenizer, BertModel
+from sklearn.preprocessing import normalize
+
+# Initialize BERT model and tokenizer
+bert_model = BertModel.from_pretrained('bert-base-uncased')
+bert_tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 # Use NLTK library for advanced tokenization and text processing
 lemmatizer = WordNetLemmatizer()
@@ -112,6 +119,21 @@ class Corpus:
         if self.toggle_feats['name']:
             self.name_tokens = {token: i for i, token in enumerate(set([token for restaurant in self.train_data for token in self.tokenize(restaurant.name)]))}
 
+    def generate_bert_embeddings(self, tokens):
+        """
+        25/06: Marina
+        Generates BERT embeddings for a given list of tokens.
+        """
+        input_ids = bert_tokenizer.encode(tokens, add_special_tokens=True)  # Add special tokens takes care of adding [CLS], [SEP], <s>... tokens in the right way for each model.
+        input_ids = input_ids[:512]  # Truncate to the maximum length BERT can handle
+
+        with torch.no_grad():
+            last_hidden_states = bert_model(torch.tensor([input_ids]))  # Models outputs are now tuples
+
+        # Get embeddings of [CLS] token
+        sentence_embedding = last_hidden_states[0][:, 0, :].numpy()
+        return sentence_embedding.tolist()[0]  # Convert the numpy array to a Python list
+
     def extract_features(self, instances: list):
         """
         Store resulting features as an instance variable.
@@ -132,6 +154,7 @@ class Corpus:
             features['food_type'] = {self.food_types[restaurant.category]: 1} \
                 if self.toggle_feats['type'] and restaurant.category in self.food_types \
                 else {}
+            """
             # Bag of words for menu items, now counting each item
             if self.toggle_feats['menu']:
                 features['menu'] = {}
@@ -145,6 +168,7 @@ class Corpus:
             else:
                 features['menu'] = {}
             """
+            """
             # Bag of words for restaurant name, now counting each token
             if self.toggle_feats['name']:
                 features['name'] = {}
@@ -157,6 +181,7 @@ class Corpus:
             else:
                 features['name'] = {}
             """
+            """ 
             # Bag of words for menu items, now tokenizing each item
             features['menu'] = {self.menu_tokens[token]: 1 for item in restaurant.menu for token in self.tokenize(item) if token in self.menu_tokens} \
                 if self.toggle_feats['menu'] \
@@ -167,15 +192,28 @@ class Corpus:
                 features['name'] = {self.name_tokens[token]: 1 for token in name_tokens if token in self.name_tokens}
             else:
                 features['name'] = {}
+            """
+            # BERT embeddings for restaurant name
+            if self.toggle_feats['name']:
+                name_tokens = self.tokenize(restaurant.name)
+                features['name'] = self.generate_bert_embeddings(name_tokens)
+            # BERT embeddings for menu items
+            if self.toggle_feats['menu']:
+                menu_tokens = []
+                for item in restaurant.menu:
+                    menu_tokens.extend(self.tokenize(item))
+                features['menu'] = self.generate_bert_embeddings(menu_tokens)
             restaurant.features = features
 
-    def get_dense_features(self, instance: Restaurant, normalize=False) -> list:
+
+    # def get_dense_features(self, instance: Restaurant, normalize=False) -> list:
         """
         Converts sparse feature representation of a single Restaurant instance
         to decoded dense representation
         :param normalize: Choose whether the bag of words counts should be normalized (doesn't apply to binary BOW)
         :param instance: Restaurant instance
         :return: Dense feature representation as a list
+        """
         """
         enc_name = instance.features['name'] if self.toggle_feats['name'] else {}
         enc_food_type = instance.features['food_type'] if self.toggle_feats['type'] else {}
@@ -196,6 +234,28 @@ class Corpus:
         if normalize:
             dec_name = [round(x/self.max_name_count, 5) for x in dec_name]
             dec_menu = [round(x/self.max_menu_count, 5) for x in dec_menu]
+
+        return dec_food_type + dec_location + dec_menu + dec_name
+"""
+
+    def get_dense_features(self, instance: Restaurant, normalize_embeddings=False) -> list:
+        """
+        25/06: Marina
+        Converts sparse feature representation of a single Restaurant instance
+        to decoded dense representation
+        :param normalize_embeddings: Choose whether the BERT embeddings should be normalized (L2 normalization)
+        :param instance: Restaurant instance
+        :return: Dense feature representation as a list
+        """
+        dec_name = instance.features['name'] if self.toggle_feats['name'] else [0]*768
+        dec_food_type = instance.features['food_type'] if self.toggle_feats['type'] else [0]*len(self.food_types)
+        dec_location = instance.features['location'] if self.toggle_feats['loc'] else [0]*len(self.locations)
+        dec_menu = instance.features['menu'] if self.toggle_feats['menu'] else [0]*768
+
+        if normalize_embeddings:
+            # Normalize BERT embeddings for 'name' and 'menu'
+            dec_name = normalize([dec_name])[0].tolist()
+            dec_menu = normalize([dec_menu])[0].tolist()
 
         return dec_food_type + dec_location + dec_menu + dec_name
 
