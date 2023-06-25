@@ -5,7 +5,7 @@ from Evaluator import Evaluator
 from tqdm import tqdm
 
 if __name__ == "__main__":
-    EPOCHS = 5  # Define the number of training iterations
+    EPOCHS = 3  # Define the number of training iterations
 
     # Load corpus
     data = Corpus.read_file("data/menu_train.txt")
