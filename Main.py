@@ -1,8 +1,31 @@
 import random
+import pickle
 from Perceptron import Perceptron
 from Corpus import Corpus
 from Evaluator import Evaluator
 from tqdm import tqdm
+from typing import Any
+
+
+def save_model(model: Any, filepath: str):
+    """
+    Wrapper to save the model in a pickle
+    :param model: Model as an object
+    :param filepath: Path to the file it should be saved in
+    """
+    with open(filepath, 'wb') as f:
+        pickle.dump(model, f)
+
+
+def load_model(filepath: str) -> Any:
+    """
+    Wrapper to load a model from a pickle
+    :param filepath: Path to the file
+    :return: The model stored in the pickle, as its corresponding object type
+    """
+    with open(filepath, 'rb') as f:
+        return pickle.load(f)
+
 
 if __name__ == "__main__":
     EPOCHS = 5  # Define the number of training iterations
@@ -19,6 +42,8 @@ if __name__ == "__main__":
     train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
     for perceptron in tqdm(perceptrons):
         perceptron.train(train_data, EPOCHS)
+
+    # perceptrons = [load_model("models/perc1"), load_model("models/perc2"), load_model("models/perc3"), load_model("models/perc4")]
 
     # Make predictions
     for restaurant in corpus.test_data:
@@ -99,3 +124,7 @@ average_correlation = sum(correlations) / len(correlations)
 
 print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
 print(f"Average Correlation across all folds: {average_correlation:.2f}")
+
+for p in perceptrons:
+    save_model(p, "models/perc" + str(p.tar_label))
+    print(f"Perceptron {p.tar_label} saved")
