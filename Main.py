@@ -34,7 +34,7 @@ if __name__ == "__main__":
     data = Corpus.read_file("data/menu_train.txt")
     dev = Corpus.read_file("data/menu_dev.txt")
 
-    corpus = Corpus(data, test_data=dev, exclude_feats=['type', 'loc'])
+    corpus = Corpus(data, test_data=dev, exclude_feats=None)
 
     # Initialize perceptron for each class
     perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
@@ -126,5 +126,5 @@ print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
 print(f"Average Correlation across all folds: {average_correlation:.2f}")
 
 for p in perceptrons:
-    save_model(p, "models/perc" + str(p.tar_label))
+    save_model(p, "out/all_feats_5_epochs_perc" + str(p.tar_label))
     print(f"Perceptron {p.tar_label} saved")
