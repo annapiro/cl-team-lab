@@ -1,17 +1,12 @@
 # Restaurant price category prediction
-Authors: Marina Aziz, Anna Piroženoka 
 
-TODO:
-- implement baseline - perceptron? multiple perceptrons, each predicts one class category, pick highest probability
-- feature preprocessing - separate class or under Corpus
-- how to represent the features?
-  - bag-of-words for menu items
-  - one-hot encoding for location and food type
-  - restaurant names - not sure yet? keywords like "pizza", "cafe" etc can be useful
-- tokenization 
-- how to store very sparse matrices/vectors - only store the indices
+The classifier is designed to work with the following dataset:
 
-Done:
-- evaluation methods
-  - F-score
-  - correlation score
+http://dx.doi.org/10.7910/DVN/QMLCPD
+
+## Steps to run the model
+
+- download the data and save it as `data/menu_train.txt`, `data/menu_dev.txt` and `data/menu_test.txt` 
+- run Main.py
+
+TODO: improve the documentation
