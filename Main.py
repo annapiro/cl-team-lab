@@ -5,6 +5,7 @@ from Corpus import Corpus
 from Evaluator import Evaluator
 from tqdm import tqdm
 from typing import Any
+from sentence_transformers import SentenceTransformer
 
 
 def save_model(model: Any, filepath: str):
@@ -34,12 +35,17 @@ if __name__ == "__main__":
     data = Corpus.read_file("data/menu_train.txt")
     dev = Corpus.read_file("data/menu_dev.txt")
 
-    corpus = Corpus(data, test_data=dev, exclude_feats=None)
+    corpus = Corpus(data, test_data=dev, exclude_feats=['name', 'menu', 'type', 'loc'])
 
-    # Initialize perceptron for each class
-    perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
+    # bag-of-words-based perceptrons
+    # perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
+    # train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
 
-    train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
+    # embeddings-based perceptrons (menu only)
+    model = SentenceTransformer('all-MiniLM-L6-v2')
+    perceptrons = [Perceptron(384, i) for i in range(1, 5)]  # 384 is the fixed output of the model we're using
+    train_data = [(model.encode(restaurant.menu).tolist(), restaurant.gold_label) for restaurant in corpus.train_data]
+
     for perceptron in tqdm(perceptrons):
         perceptron.train(train_data, EPOCHS)
 
@@ -47,7 +53,8 @@ if __name__ == "__main__":
 
     # Make predictions
     for restaurant in corpus.test_data:
-        dense_features = corpus.get_dense_features(restaurant)
+        # dense_features = corpus.get_dense_features(restaurant)  # bag of words
+        dense_features = model.encode(restaurant.menu).tolist()  # embeddings
         predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
         # Get the predicted class (1-indexed)
         predicted_class = predictions.index(max(predictions)) + 1
@@ -125,6 +132,6 @@ average_correlation = sum(correlations) / len(correlations)
 print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
 print(f"Average Correlation across all folds: {average_correlation:.2f}")
 
-for p in perceptrons:
-    save_model(p, "out/all_feats_5_epochs_perc" + str(p.tar_label))
-    print(f"Perceptron {p.tar_label} saved")
+# for p in perceptrons:
+#     save_model(p, "out/all_feats_5_epochs_perc" + str(p.tar_label))
+#     print(f"Perceptron {p.tar_label} saved")
