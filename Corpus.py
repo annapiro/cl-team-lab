@@ -41,13 +41,11 @@ class Corpus:
         self.extract_features(self.train_data)
         if self.test_data:
             self.extract_features(self.test_data)
-
         # find maximum values in the training data to use in normalization
-        self.max_menu_count = max({x for rest in self.train_data for x in rest.features['menu'].values()}) \
+        self.max_menu_count = max({len(rest.features['menu']) for rest in self.train_data}) \
             if self.toggle_feats['menu'] else 1
-        self.max_name_count = max({x for rest in self.train_data for x in rest.features['name'].values()}) \
+        self.max_name_count = max({len(rest.features['name']) for rest in self.train_data}) \
             if self.toggle_feats['name'] else 1
-
         # store the length of the feature vector of each instance in the corpus
         self.num_feats = len(self.menu_tokens) + len(self.food_types) + len(self.locations) + len(self.name_tokens)
 
@@ -122,17 +120,19 @@ class Corpus:
     def generate_bert_embeddings(self, tokens):
         """
         25/06: Marina
+        02/07: converted the output to dictionary instead of a list.
         Generates BERT embeddings for a given list of tokens.
         """
+        tokens = tokens[:510]  # Truncate to the maximum length BERT can handle, save room for [CLS] and [SEP]
         input_ids = bert_tokenizer.encode(tokens, add_special_tokens=True)  # Add special tokens takes care of adding [CLS], [SEP], <s>... tokens in the right way for each model.
-        input_ids = input_ids[:512]  # Truncate to the maximum length BERT can handle
 
         with torch.no_grad():
             last_hidden_states = bert_model(torch.tensor([input_ids]))  # Models outputs are now tuples
 
         # Get embeddings of [CLS] token
         sentence_embedding = last_hidden_states[0][:, 0, :].numpy()
-        return sentence_embedding.tolist()[0]  # Convert the numpy array to a Python list
+        # Convert the numpy array to a Python list and map each item to its index
+        return {i: val for i, val in enumerate(sentence_embedding.tolist()[0])}
 
     def extract_features(self, instances: list):
         """
@@ -155,43 +155,16 @@ class Corpus:
                 if self.toggle_feats['type'] and restaurant.category in self.food_types \
                 else {}
             """
-            # Bag of words for menu items, now counting each item
-            if self.toggle_feats['menu']:
-                features['menu'] = {}
-                for item in restaurant.menu:
-                    for token in self.tokenize(item):
-                        if token in self.menu_tokens:
-                            if self.menu_tokens[token] in features['menu']:
-                                features['menu'][self.menu_tokens[token]] += 1
-                            else:
-                                features['menu'][self.menu_tokens[token]] = 1
-            else:
-                features['menu'] = {}
-            """
-            """
-            # Bag of words for restaurant name, now counting each token
-            if self.toggle_feats['name']:
-                features['name'] = {}
-                for token in self.tokenize(restaurant.name):
-                    if token in self.name_tokens:
-                        if self.name_tokens[token] in features['name']:
-                            features['name'][self.name_tokens[token]] += 1
-                        else:
-                            features['name'][self.name_tokens[token]] = 1
-            else:
-                features['name'] = {}
-            """
-            """ 
-            # Bag of words for menu items, now tokenizing each item
-            features['menu'] = {self.menu_tokens[token]: 1 for item in restaurant.menu for token in self.tokenize(item) if token in self.menu_tokens} \
-                if self.toggle_feats['menu'] \
-                else {}
-            # Bag of words for restaurant name
+            # BERT embeddings for restaurant name
             if self.toggle_feats['name']:
                 name_tokens = self.tokenize(restaurant.name)
-                features['name'] = {self.name_tokens[token]: 1 for token in name_tokens if token in self.name_tokens}
-            else:
-                features['name'] = {}
+                features['name'] = self.generate_bert_embeddings(name_tokens)
+            # BERT embeddings for menu items
+            if self.toggle_feats['menu']:
+                menu_tokens = []
+                for item in restaurant.menu:
+                    menu_tokens.extend(self.tokenize(item))
+                features['menu'] = self.generate_bert_embeddings(menu_tokens)
             """
             # BERT embeddings for restaurant name
             if self.toggle_feats['name']:
@@ -237,7 +210,6 @@ class Corpus:
 
         return dec_food_type + dec_location + dec_menu + dec_name
 """
-
     def get_dense_features(self, instance: Restaurant, normalize_embeddings=False) -> list:
         """
         25/06: Marina
@@ -247,10 +219,10 @@ class Corpus:
         :param instance: Restaurant instance
         :return: Dense feature representation as a list
         """
-        dec_name = instance.features['name'] if self.toggle_feats['name'] else [0]*768
-        dec_food_type = instance.features['food_type'] if self.toggle_feats['type'] else [0]*len(self.food_types)
-        dec_location = instance.features['location'] if self.toggle_feats['loc'] else [0]*len(self.locations)
-        dec_menu = instance.features['menu'] if self.toggle_feats['menu'] else [0]*768
+        dec_name = list(instance.features['name'].values()) if self.toggle_feats['name'] else [0]*768
+        dec_food_type = list(instance.features['food_type'].values()) if self.toggle_feats['type'] else [0]*len(self.food_types)
+        dec_location = list(instance.features['location'].values()) if self.toggle_feats['loc'] else [0]*len(self.locations)
+        dec_menu = list(instance.features['menu'].values()) if self.toggle_feats['menu'] else [0]*768
 
         if normalize_embeddings:
             # Normalize BERT embeddings for 'name' and 'menu'

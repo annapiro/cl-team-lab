@@ -1,31 +1,32 @@
-import random
-from Perceptron import Perceptron
+from Perceptron import MultiClassPerceptron
 from Corpus import Corpus
 from Evaluator import Evaluator
 from tqdm import tqdm
+import numpy as np
+import random
 
 if __name__ == "__main__":
     EPOCHS = 2  # Define the number of training iterations
 
     # Load corpus
     data = Corpus.read_file("data/menu_sample.txt")
-    dev = Corpus.read_file("data/menu_dev.txt")
+    dev = Corpus.read_file("data/menu_sample.txt")
 
-    corpus = Corpus(data, test_data=dev, exclude_feats=['type', 'loc'])
+    corpus = Corpus(data, test_data=dev, exclude_feats=[])
 
-    # Initialize perceptron for each class
-    perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
+    # Initialize multi-class perceptron
+    perceptron = MultiClassPerceptron()
 
+    # Prepare the training data
     train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
-    for perceptron in tqdm(perceptrons):
-        perceptron.train(train_data, EPOCHS)
+    
+    # Train the perceptron
+    perceptron.train(train_data)
 
     # Make predictions
     for restaurant in corpus.test_data:
         dense_features = corpus.get_dense_features(restaurant)
-        predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
-        # Get the predicted class (1-indexed)
-        predicted_class = predictions.index(max(predictions)) + 1
+        predicted_class = perceptron.predict(dense_features)
         # Set the predicted label
         restaurant.set_predicted_label(predicted_class)
 
@@ -34,7 +35,7 @@ if __name__ == "__main__":
     fold_size = len(data) // K
     f1_scores = []
     correlations = []
-    """
+
     random.shuffle(data)
 
     for i in range(K):
@@ -47,40 +48,21 @@ if __name__ == "__main__":
         num_features = corpus.num_feats
 
         # Initialize perceptron for each class
-        perceptrons = [Perceptron(num_features, i) for i in range(1, 5)]  # Assuming 4 price categories
+        perceptron = MultiClassPerceptron() 
 
         # Train perceptrons
         train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
-        for perceptron in tqdm(perceptrons):
-            perceptron.train(train_data, EPOCHS)
+        perceptron.train(train_data)
 
         # Make predictions
         for restaurant in corpus.test_data:
             dense_features = corpus.get_dense_features(restaurant)
-            predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
-            # Get the predicted class (1-indexed)
-            predicted_class = predictions.index(max(predictions)) + 1
+            predicted_class = perceptron.predict(dense_features)
             # Set the predicted label
             restaurant.set_predicted_label(predicted_class)
-    """
-
-    # Evaluate perceptrons
-    y_true = []
-    y_pred = []
-    for restaurant in corpus.test_data:
-        # Check if gold_label and predicted_label are not None
-        if restaurant.gold_label is None:
-            print(f"Gold label for restaurant {restaurant.name} is None.")
-            continue
-        if restaurant.pred_label is None:
-            print(f"Predicted label for restaurant {restaurant.name} is None.")
-            continue
-
-        y_true.append(restaurant.gold_label)
-        y_pred.append(restaurant.pred_label)
 
     # For testing if the labels are assigned correctly
-    # corpus.print_labels()
+    corpus.print_labels()
 
     # Set up evaluator
     evaluator = Evaluator(corpus)
