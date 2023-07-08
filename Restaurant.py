@@ -8,7 +8,6 @@ class Restaurant:
         self.pred_label = None
         self.category = features[2]
         self.location = features[3]
-        self.embedding = list()
         self.menu = features[4]
         self.features = {}  # this will store our features
 

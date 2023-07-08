@@ -29,13 +29,17 @@ def load_model(filepath: str) -> Any:
 
 
 if __name__ == "__main__":
-    EPOCHS = 5  # Define the number of training iterations
+    EPOCHS = 3  # Define the number of training iterations
 
     # Load corpus
-    data = Corpus.read_file("data/menu_train.txt")
+    data = Corpus.read_file("data/menu_train.txt")  # comment out this line if loading from json
     dev = Corpus.read_file("data/menu_dev.txt")
 
+    # create corpus from training data
     corpus = Corpus(data, test_data=dev, exclude_feats=None)
+
+    # load corpus from json
+    # corpus = Corpus(test_data=dev, load_mapping="feature_mapping.json")
 
     # bag-of-words-based perceptrons
     perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
@@ -50,7 +54,10 @@ if __name__ == "__main__":
         perceptron.train(train_data, EPOCHS)
 
     # load existing models
-    # perceptrons = [load_model("models/perc1"), load_model("models/perc2"), load_model("models/perc3"), load_model("models/perc4")]
+    # perceptrons = [load_model("models/all_feats_3_ep_perc1"),
+    #                load_model("models/all_feats_3_ep_perc2"),
+    #                load_model("models/all_feats_3_ep_perc3"),
+    #                load_model("models/all_feats_3_ep_perc4")]
 
     # Make predictions
     for restaurant in corpus.test_data:
@@ -63,8 +70,8 @@ if __name__ == "__main__":
         restaurant.set_predicted_label(predicted_class)
 
     # Cross-validation
-    K = 5  # number of splits for cross-validation
-    fold_size = len(data) // K
+    # K = 5  # number of splits for cross-validation
+    # fold_size = len(data) // K
     f1_scores = []
     correlations = []
     """
@@ -133,6 +140,6 @@ average_correlation = sum(correlations) / len(correlations)
 print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
 print(f"Average Correlation across all folds: {average_correlation:.2f}")
 
-# for p in perceptrons:
-#     save_model(p, "out/all_feats_5_epochs_perc" + str(p.tar_label))
-#     print(f"Perceptron {p.tar_label} saved")
+for p in perceptrons:
+    save_model(p, "out/perc" + str(p.tar_label))
+    print(f"Perceptron {p.tar_label} saved")

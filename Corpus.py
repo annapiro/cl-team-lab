@@ -1,15 +1,27 @@
 # class that represents the whole corpus of restaurants
 from Restaurant import Restaurant
 import string
+import json
 
 
 class Corpus:
-    def __init__(self, train_data: list, test_data: list = None, exclude_feats: list = None):
+    def __init__(self,
+                 train_data: list = None,
+                 test_data: list = None,
+                 exclude_feats: list = None,
+                 load_mapping: str = None):
+        # either method of populating the feature dictionaries should be provided
+        if not train_data and not load_mapping:
+            raise ValueError("Please provide either training data as tsv file or feature mapping as json. "
+                             "No corpus was created")
+        if train_data and load_mapping:
+            print("New training data provided. Old feature mappings will be ignored")
+
         # list of instances that will be used for training
         self.train_data = train_data
         # list of instances that will be used for testing
         # can be added later via set_test_data
-        self.test_data = test_data if test_data else None
+        self.test_data = test_data
 
         # default features that will be extracted in the corpus
         self.toggle_feats = {'name': 1, 'type': 1, 'loc': 1, 'menu': 1}
@@ -23,20 +35,36 @@ class Corpus:
         self.locations = dict()
         self.menu_tokens = dict()
 
-        # extract features
-        self.build_dictionaries()
-        self.extract_features(self.train_data)
+        # maximum values in the training data for normalization
+        self.max_menu_count = 1
+        self.max_name_count = 1
+
+        if train_data:
+            self._init_from_data()
+        elif load_mapping:
+            self.load_feature_mapping(load_mapping)
+
         if self.test_data:
             self.extract_features(self.test_data)
 
-        # find maximum values in the training data to use in normalization
-        self.max_menu_count = max({x for rest in self.train_data for x in rest.features['menu'].values()}) \
-            if self.toggle_feats['menu'] else 1
-        self.max_name_count = max({x for rest in self.train_data for x in rest.features['name'].values()}) \
-            if self.toggle_feats['name'] else 1
-
         # store the length of the feature vector of each instance in the corpus
         self.num_feats = len(self.menu_tokens) + len(self.food_types) + len(self.locations) + len(self.name_tokens)
+
+    def _init_from_data(self):
+        """
+        Creates feature dictionaries from scratch in cases where training data is provided
+        """
+        # extract features
+        self.build_dictionaries()
+        self.extract_features(self.train_data)
+        if self.toggle_feats['menu']:
+            self.max_menu_count = max({x for rest in self.train_data for x in rest.features['menu'].values()})
+        if self.toggle_feats['name']:
+            self.max_name_count = max({x for rest in self.train_data for x in rest.features['name'].values()})
+
+        # saves feature mappings and other settings to a json file
+        self.save_feature_mapping()
+        print("Corpus settings saved to last_feature_mapping.json in current directory.")
 
     @staticmethod
     def read_file(filepath: str) -> list:
@@ -207,6 +235,37 @@ class Corpus:
             print(f"Gold Label: {instance.gold_label}")
             print(f"Predicted Label: {instance.pred_label}")
             print("-"*30)  # prints a divider for clarity
+
+    def save_feature_mapping(self):
+        """
+        Saves feature mappings and other settings to a json file
+        The file is always called last_feature_mapping.json and saved in current directory
+        """
+        feature_mapping = {
+            "toggle_feats": self.toggle_feats,
+            "name_tokens": self.name_tokens,
+            "food_types": self.food_types,
+            "locations": self.locations,
+            "menu_tokens": self.menu_tokens,
+            "max_values": (self.max_name_count, self.max_menu_count)
+        }
+        with open("last_feature_mapping.json", 'w') as f:
+            json.dump(feature_mapping, f, indent=4)
+
+    def load_feature_mapping(self, filepath: str):
+        """
+        Loads saved feature mappings from a json file
+        :param filepath: path to the json file with the settings
+        """
+        with open(filepath) as f:
+            feature_mapping = json.load(f)
+        self.toggle_feats = feature_mapping["toggle_feats"]
+        self.name_tokens = feature_mapping["name_tokens"]
+        self.food_types = feature_mapping["food_types"]
+        self.locations = feature_mapping["locations"]
+        self.menu_tokens = feature_mapping["menu_tokens"]
+        self.max_name_count = feature_mapping["max_values"][0]
+        self.max_menu_count = feature_mapping["max_values"][1]
 
 
 # for testing
