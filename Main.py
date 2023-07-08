@@ -35,26 +35,27 @@ if __name__ == "__main__":
     data = Corpus.read_file("data/menu_train.txt")
     dev = Corpus.read_file("data/menu_dev.txt")
 
-    corpus = Corpus(data, test_data=dev, exclude_feats=['name', 'menu', 'type', 'loc'])
+    corpus = Corpus(data, test_data=dev, exclude_feats=None)
 
     # bag-of-words-based perceptrons
-    # perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
-    # train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
+    perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
+    train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
 
     # embeddings-based perceptrons (menu only)
-    model = SentenceTransformer('all-MiniLM-L6-v2')
-    perceptrons = [Perceptron(384, i) for i in range(1, 5)]  # 384 is the fixed output of the model we're using
-    train_data = [(model.encode(restaurant.menu).tolist(), restaurant.gold_label) for restaurant in corpus.train_data]
+    # model = SentenceTransformer('all-MiniLM-L6-v2')
+    # perceptrons = [Perceptron(384, i) for i in range(1, 5)]  # 384 is the fixed output of the model we're using
+    # train_data = [(model.encode(restaurant.menu).tolist(), restaurant.gold_label) for restaurant in corpus.train_data]
 
     for perceptron in tqdm(perceptrons):
         perceptron.train(train_data, EPOCHS)
 
+    # load existing models
     # perceptrons = [load_model("models/perc1"), load_model("models/perc2"), load_model("models/perc3"), load_model("models/perc4")]
 
     # Make predictions
     for restaurant in corpus.test_data:
-        # dense_features = corpus.get_dense_features(restaurant)  # bag of words
-        dense_features = model.encode(restaurant.menu).tolist()  # embeddings
+        dense_features = corpus.get_dense_features(restaurant)  # bag of words
+        # dense_features = model.encode(restaurant.menu).tolist()  # embeddings
         predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
         # Get the predicted class (1-indexed)
         predicted_class = predictions.index(max(predictions)) + 1

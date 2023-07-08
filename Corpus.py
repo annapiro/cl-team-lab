@@ -85,7 +85,7 @@ class Corpus:
         :param text: string to be tokenized
         :return: list of strings where each element is a token
         """
-        text = text.lower()  # make it case-insensitive
+        text = text.lower().replace(";", " ")  # make it case-insensitive and remove separators
         text = text.translate(str.maketrans('', '', string.punctuation))  # remove punctuation
         return text.split()
 
@@ -95,13 +95,17 @@ class Corpus:
         Dictionaries are built only based on the features in the training data
         """
         if self.toggle_feats['type']:
-            self.food_types = {category: i for i, category in enumerate(set([restaurant.category for restaurant in self.train_data]))}
+            self.food_types = {category: i for i, category in enumerate(
+                set([restaurant.category for restaurant in self.train_data]))}
         if self.toggle_feats['loc']:
-            self.locations = {location: i for i, location in enumerate(set([restaurant.location for restaurant in self.train_data]))}
+            self.locations = {location: i for i, location in enumerate(
+                set([restaurant.location for restaurant in self.train_data]))}
         if self.toggle_feats['menu']:
-            self.menu_tokens = {token: i for i, token in enumerate(set([token for restaurant in self.train_data for item in restaurant.menu for token in self.tokenize(item)]))}
+            self.menu_tokens = {token: i for i, token in enumerate(
+                set([token for restaurant in self.train_data for token in self.tokenize(restaurant.menu)]))}
         if self.toggle_feats['name']:
-            self.name_tokens = {token: i for i, token in enumerate(set([token for restaurant in self.train_data for token in self.tokenize(restaurant.name)]))}
+            self.name_tokens = {token: i for i, token in enumerate(
+                set([token for restaurant in self.train_data for token in self.tokenize(restaurant.name)]))}
 
     def extract_features(self, instances: list):
         """
@@ -123,19 +127,21 @@ class Corpus:
             features['food_type'] = {self.food_types[restaurant.category]: 1} \
                 if self.toggle_feats['type'] and restaurant.category in self.food_types \
                 else {}
+
+            # the code below was used to test counted bag of words
+            """
             # Bag of words for menu items, now counting each item
             if self.toggle_feats['menu']:
                 features['menu'] = {}
-                for item in restaurant.menu:
-                    for token in self.tokenize(item):
-                        if token in self.menu_tokens:
-                            if self.menu_tokens[token] in features['menu']:
-                                features['menu'][self.menu_tokens[token]] += 1
-                            else:
-                                features['menu'][self.menu_tokens[token]] = 1
+                for token in self.tokenize(restaurant.menu):
+                    if token in self.menu_tokens:
+                        if self.menu_tokens[token] in features['menu']:
+                            features['menu'][self.menu_tokens[token]] += 1
+                        else:
+                            features['menu'][self.menu_tokens[token]] = 1
             else:
                 features['menu'] = {}
-            """
+
             # Bag of words for restaurant name, now counting each token
             if self.toggle_feats['name']:
                 features['name'] = {}
@@ -148,11 +154,13 @@ class Corpus:
             else:
                 features['name'] = {}
             """
+
             # Bag of words for menu items, now tokenizing each item
-            features['menu'] = {self.menu_tokens[token]: 1 for item in restaurant.menu for token in self.tokenize(item) if token in self.menu_tokens} \
-                if self.toggle_feats['menu'] \
-                else {}
-            # Bag of words for restaurant name
+            if self.toggle_feats['menu']:
+                menu_tokens = self.tokenize(restaurant.menu)
+                features['menu'] = {self.menu_tokens[token]: 1 for token in menu_tokens if token in self.menu_tokens}
+            else:
+                features['menu'] = {}
             if self.toggle_feats['name']:
                 name_tokens = self.tokenize(restaurant.name)
                 features['name'] = {self.name_tokens[token]: 1 for token in name_tokens if token in self.name_tokens}

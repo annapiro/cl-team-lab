@@ -9,8 +9,7 @@ class Restaurant:
         self.category = features[2]
         self.location = features[3]
         self.embedding = list()
-        # self.menu = features[4].split(";")  # for bag of words
-        self.menu = features[4]  # for embeddings
+        self.menu = features[4]
         self.features = {}  # this will store our features
 
     def __repr__(self):
