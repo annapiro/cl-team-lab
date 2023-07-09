@@ -315,14 +315,14 @@ class Corpus:
         The file is always called last_feature_mapping.json and saved in current directory
         """
         feature_mapping = {
+            "version": self.version,
             "toggle_feats": self.toggle_feats,
             "method": self.method,
-            "map_names": self.map_names,
-            "map_types": self.map_types,
-            "map_locs": self.map_locs,
-            "map_menu": self.map_menu,
             "max_values": (self.max_name_count, self.max_menu_count),
-            "version": self.version
+            "map_locs": self.map_locs,
+            "map_types": self.map_types,
+            "map_names": self.map_names,
+            "map_menu": self.map_menu
         }
         with open("last_feature_mapping.json", 'w') as f:
             json.dump(feature_mapping, f, indent=4)

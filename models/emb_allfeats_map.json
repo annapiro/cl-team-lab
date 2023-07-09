@@ -1,0 +1,18 @@
+{
+    "toggle_feats": {
+        "name": 1,
+        "type": 1,
+        "loc": 1,
+        "menu": 1
+    },
+    "method": "emb",
+    "map_names": {},
+    "map_types": {},
+    "map_locs": {},
+    "map_menu": {},
+    "max_values": [
+        1,
+        1
+    ],
+    "version": "v2.2"
+}

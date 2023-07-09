@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # create corpus from training data
     # choose which features to exclude: ['name', 'type', 'loc', 'menu']
     # chose feature extraction method: 'bow' for bag of words or 'emb' for embeddings
-    corpus = Corpus(data, test_data=dev, exclude_feats=None, method='emb')
+    corpus = Corpus(train_data=data, test_data=dev, exclude_feats=None, method='bow')
 
     # load corpus from json
     # corpus = Corpus(test_data=dev, load_mapping="models/feature_mapping.json", method='bow')
@@ -68,7 +68,6 @@ if __name__ == "__main__":
     # Make predictions
     for restaurant in corpus.test_data:
         dense_features = corpus.get_dense_features(restaurant)
-        # dense_features = model.encode(restaurant.menu).tolist()  # embeddings
         predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
         # Get the predicted class (1-indexed)
         predicted_class = predictions.index(max(predictions)) + 1
