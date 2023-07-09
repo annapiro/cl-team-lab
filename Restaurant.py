@@ -1,5 +1,12 @@
-# class that represents a single instance of a restaurant
-# has attributes name, gold label, predicted label, category, location, and menu
+"""
+Restaurant
+
+Represents a single instance of a restaurant.
+
+Date: 09.07.2023
+
+Has attributes name, gold label, predicted label, category, location, and menu.
+"""
 
 class Restaurant:
     def __init__(self, features: list):
@@ -24,7 +31,6 @@ class Restaurant:
         """
         Simple method to map string-based labels to number-based ones
         If the label is already a number, it is simply returned as an integer
-        TODO not sure if this encoding is good, maybe revisit it
         :param label: label in the form of a string $, $$, $$$, or $$$$, or a number
         :return: integer representing the label
         """

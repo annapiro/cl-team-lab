@@ -1,3 +1,11 @@
+"""
+Main
+
+Contains the pipeline to train and evaluate the model.
+
+Date: 09.07.2023
+"""
+
 import random
 import pickle
 from Perceptron import Perceptron
@@ -5,7 +13,6 @@ from Corpus import Corpus
 from Evaluator import Evaluator
 from tqdm import tqdm
 from typing import Any
-from sentence_transformers import SentenceTransformer
 
 
 def save_model(model: Any, filepath: str):
@@ -36,20 +43,19 @@ if __name__ == "__main__":
     dev = Corpus.read_file("data/menu_dev.txt")
 
     # create corpus from training data
-    corpus = Corpus(data, test_data=dev, exclude_feats=None)
+    # choose which features to exclude: ['name', 'type', 'loc', 'menu']
+    # chose feature extraction method: 'bow' for bag of words or 'emb' for embeddings
+    corpus = Corpus(data, test_data=dev, exclude_feats=None, method='emb')
 
     # load corpus from json
-    # corpus = Corpus(test_data=dev, load_mapping="feature_mapping.json")
+    # corpus = Corpus(test_data=dev, load_mapping="models/feature_mapping.json", method='bow')
 
-    # bag-of-words-based perceptrons
+    # initialize a perceptron for each price category
     perceptrons = [Perceptron(corpus.num_feats, i) for i in range(1, 5)]  # Assuming 4 price categories
+    # collect training data as a list of tuple (feature_vector, gold_label)
     train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
 
-    # embeddings-based perceptrons (menu only)
-    # model = SentenceTransformer('all-MiniLM-L6-v2')
-    # perceptrons = [Perceptron(384, i) for i in range(1, 5)]  # 384 is the fixed output of the model we're using
-    # train_data = [(model.encode(restaurant.menu).tolist(), restaurant.gold_label) for restaurant in corpus.train_data]
-
+    print("\nTraining the model...")
     for perceptron in tqdm(perceptrons):
         perceptron.train(train_data, EPOCHS)
 
@@ -61,7 +67,7 @@ if __name__ == "__main__":
 
     # Make predictions
     for restaurant in corpus.test_data:
-        dense_features = corpus.get_dense_features(restaurant)  # bag of words
+        dense_features = corpus.get_dense_features(restaurant)
         # dense_features = model.encode(restaurant.menu).tolist()  # embeddings
         predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
         # Get the predicted class (1-indexed)
@@ -137,9 +143,11 @@ if __name__ == "__main__":
 average_f1_score = sum(f1_scores) / len(f1_scores)
 average_correlation = sum(correlations) / len(correlations)
 
+print()
 print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
 print(f"Average Correlation across all folds: {average_correlation:.2f}")
 
+print()
 for p in perceptrons:
-    save_model(p, "out/perc" + str(p.tar_label))
+    save_model(p, "out/emb_allfeats_3ep_perc" + str(p.tar_label))
     print(f"Perceptron {p.tar_label} saved")
