@@ -28,7 +28,7 @@ class Corpus:
                  load_mapping: str = None,
                  method: str = 'bow'):
         # current version of Corpus for tracking compatibility with external feature mappings
-        self.version = 'v2.1'
+        self.version = 'v2.2'
 
         if method != 'bow' and method != 'emb':
             raise ValueError("Invalid method chosen. "
@@ -64,10 +64,10 @@ class Corpus:
                 self.toggle_feats[toggle] = 0
 
         # initialize feature dictionaries
-        self.name_tokens = dict()
-        self.food_types = dict()
-        self.locations = dict()
-        self.menu_tokens = dict()
+        self.map_names = dict()
+        self.map_types = dict()
+        self.map_locs = dict()
+        self.map_menu = dict()
 
         # initialize maximum values in the training data (used in normalization)
         self.max_menu_count = 1
@@ -83,7 +83,7 @@ class Corpus:
 
         # store the length of the feature vector of each instance in the corpus
         if self.method == 'bow':
-            self.num_feats = len(self.menu_tokens) + len(self.food_types) + len(self.locations) + len(self.name_tokens)
+            self.num_feats = len(self.map_menu) + len(self.map_types) + len(self.map_locs) + len(self.map_names)
         else:
             self.num_feats = self.emb_len * sum(self.toggle_feats.values())
 
@@ -164,16 +164,16 @@ class Corpus:
         Dictionaries are built only based on the features in the training data
         """
         if self.toggle_feats['type']:
-            self.food_types = {category: i for i, category in enumerate(
+            self.map_types = {category: i for i, category in enumerate(
                 set([restaurant.category for restaurant in self.train_data]))}
         if self.toggle_feats['loc']:
-            self.locations = {location: i for i, location in enumerate(
+            self.map_locs = {location: i for i, location in enumerate(
                 set([restaurant.location for restaurant in self.train_data]))}
         if self.toggle_feats['menu']:
-            self.menu_tokens = {token: i for i, token in enumerate(
+            self.map_menu = {token: i for i, token in enumerate(
                 set([token for restaurant in self.train_data for token in self.tokenize(restaurant.menu)]))}
         if self.toggle_feats['name']:
-            self.name_tokens = {token: i for i, token in enumerate(
+            self.map_names = {token: i for i, token in enumerate(
                 set([token for restaurant in self.train_data for token in self.tokenize(restaurant.name)]))}
 
     def extract_features(self, instances: list):
@@ -209,14 +209,14 @@ class Corpus:
             """
             # One-hot encoding for location
             # create empty dictionary if location is OOV
-            location = {self.locations[restaurant.location]: 1}\
-                if self.toggle_feats['loc'] and restaurant.location in self.locations \
+            location = {self.map_locs[restaurant.location]: 1}\
+                if self.toggle_feats['loc'] and restaurant.location in self.map_locs \
                 else {}
 
             # One-hot encoding for food type
             # create empty dictionary if restaurant category (food type) is OOV
-            food_type = {self.food_types[restaurant.category]: 1} \
-                if self.toggle_feats['type'] and restaurant.category in self.food_types \
+            food_type = {self.map_types[restaurant.category]: 1} \
+                if self.toggle_feats['type'] and restaurant.category in self.map_types \
                 else {}
 
             # bag of words for menu items
@@ -226,14 +226,14 @@ class Corpus:
                 # counted
                 if counted:
                     for token in tokenized_menu:
-                        if token in self.menu_tokens:
-                            if self.menu_tokens[token] not in menu:
-                                menu[self.menu_tokens[token]] = 0
-                            menu[self.menu_tokens[token]] += 1
+                        if token in self.map_menu:
+                            if self.map_menu[token] not in menu:
+                                menu[self.map_menu[token]] = 0
+                            menu[self.map_menu[token]] += 1
                 # binary
                 else:
-                    menu = {self.menu_tokens[token]: 1 for token in tokenized_menu
-                            if token in self.menu_tokens}
+                    menu = {self.map_menu[token]: 1 for token in tokenized_menu
+                            if token in self.map_menu}
 
             # bag of words for restaurant names
             name = {}
@@ -242,14 +242,14 @@ class Corpus:
                 # counted
                 if counted:
                     for token in tokenized_name:
-                        if token in self.name_tokens:
-                            if self.name_tokens[token] not in name:
-                                name[self.name_tokens[token]] = 0
-                            name[self.name_tokens[token]] += 1
+                        if token in self.map_names:
+                            if self.map_names[token] not in name:
+                                name[self.map_names[token]] = 0
+                            name[self.map_names[token]] += 1
                 # binary
                 else:
-                    name = {self.name_tokens[token]: 1 for token in tokenized_name
-                            if token in self.name_tokens}
+                    name = {self.map_names[token]: 1 for token in tokenized_name
+                            if token in self.map_names}
 
             return name, food_type, location, menu
 
@@ -288,10 +288,10 @@ class Corpus:
                 out[idx] = feat_dict[idx]
             return out
 
-        dec_name = _decode(enc_name, self.name_tokens)
-        dec_food_type = _decode(enc_food_type, self.food_types)
-        dec_location = _decode(enc_location, self.locations)
-        dec_menu = _decode(enc_menu, self.menu_tokens)
+        dec_name = _decode(enc_name, self.map_names)
+        dec_food_type = _decode(enc_food_type, self.map_types)
+        dec_location = _decode(enc_location, self.map_locs)
+        dec_menu = _decode(enc_menu, self.map_menu)
 
         if normalize:
             dec_name = [round(x/self.max_name_count, 5) for x in dec_name]
@@ -317,10 +317,10 @@ class Corpus:
         feature_mapping = {
             "toggle_feats": self.toggle_feats,
             "method": self.method,
-            "name_tokens": self.name_tokens,
-            "food_types": self.food_types,
-            "locations": self.locations,
-            "menu_tokens": self.menu_tokens,
+            "map_names": self.map_names,
+            "map_types": self.map_types,
+            "map_locs": self.map_locs,
+            "map_menu": self.map_menu,
             "max_values": (self.max_name_count, self.max_menu_count),
             "version": self.version
         }
@@ -339,10 +339,10 @@ class Corpus:
                 raise ValueError("JSON file is incompatible with the current version of Corpus")
             self.toggle_feats = feature_mapping["toggle_feats"]
             self.method = feature_mapping["method"]
-            self.name_tokens = feature_mapping["name_tokens"]
-            self.food_types = feature_mapping["food_types"]
-            self.locations = feature_mapping["locations"]
-            self.menu_tokens = feature_mapping["menu_tokens"]
+            self.map_names = feature_mapping["map_names"]
+            self.map_types = feature_mapping["map_types"]
+            self.map_locs = feature_mapping["map_locs"]
+            self.map_menu = feature_mapping["map_menu"]
             self.max_name_count = feature_mapping["max_values"][0]
             self.max_menu_count = feature_mapping["max_values"][1]
         except Exception as e:
