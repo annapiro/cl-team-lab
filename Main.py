@@ -45,7 +45,7 @@ if __name__ == "__main__":
     # create corpus from training data
     # choose which features to exclude: ['name', 'type', 'loc', 'menu']
     # chose feature extraction method: 'bow' for bag of words or 'emb' for embeddings
-    corpus = Corpus(train_data=data, test_data=dev, exclude_feats=None, method='bow')
+    corpus = Corpus(train_data=data, test_data=dev, exclude_feats=None, method='emb', embeddings_save_path='embeddings/embeddings', embeddings_load_path='embeddings/embeddings')
 
     # load corpus from json
     # corpus = Corpus(test_data=dev, load_mapping="models/feature_mapping.json", method='bow')

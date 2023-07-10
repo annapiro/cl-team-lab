@@ -18,7 +18,8 @@ import string
 import json
 from sentence_transformers import SentenceTransformer
 from tqdm import tqdm
-
+import numpy as np
+import os
 
 class Corpus:
     def __init__(self,
@@ -26,7 +27,9 @@ class Corpus:
                  test_data: list = None,
                  exclude_feats: list = None,
                  load_mapping: str = None,
-                 method: str = 'bow'):
+                 method: str = 'bow',
+                 embeddings_save_path=None,
+                 embeddings_load_path=None):
         # current version of Corpus for tracking compatibility with external feature mappings
         self.version = 'v2.2'
 
@@ -53,6 +56,14 @@ class Corpus:
         if self.method == 'emb':
             self.emb_model = SentenceTransformer('all-MiniLM-L6-v2')
             self.emb_len = 384
+        # define the paths where  to save or load the  embeddings.
+        self.embeddings_save_path = embeddings_save_path
+        self.embeddings_load_path = embeddings_load_path
+        # Initialize embedding attributes to None
+        self.name_embeddings = None
+        self.food_type_embeddings = None
+        self.location_embeddings = None
+        self.menu_embeddings = None
 
         # default features that will be extracted in the corpus
         self.toggle_feats = {'name': 1, 'type': 1, 'loc': 1, 'menu': 1}
@@ -176,6 +187,24 @@ class Corpus:
             self.map_names = {token: i for i, token in enumerate(
                 set([token for restaurant in self.train_data for token in self.tokenize(restaurant.name)]))}
 
+    def save_embeddings(self, embeddings):
+        """
+        Saves the generated embeddings to a numpy file (.npy).
+
+        :param embeddings: The generated embeddings to save.
+        """
+        np.save(self.embeddings_save_path, embeddings)
+
+    def load_embeddings(self):
+        """
+        Loads embeddings from a numpy file (.npy).
+
+        :return: The loaded embeddings if file exists, else None.
+        """
+        if os.path.exists(self.embeddings_load_path):
+            return np.load(self.embeddings_load_path, allow_pickle=True).item()
+        return None
+
     def extract_features(self, instances: list):
         """
         Store resulting features as an instance variable.
@@ -186,19 +215,46 @@ class Corpus:
         """
         def extract_emb() -> (list, list, list, list):
             """
-            Generates fixed-length sentence-level embeddings for each feature
+            Generates or loads fixed-length sentence-level embeddings for each feature and saves them to numpy files.
             :return: Embedding vectors for each feature in order: name, food type, location, menu
             """
-            name = self.emb_model.encode(restaurant.name).tolist() \
-                if self.toggle_feats['name'] else []
-            food_type = self.emb_model.encode(restaurant.category).tolist() \
-                if self.toggle_feats['type'] else []
-            location = self.emb_model.encode(restaurant.location).tolist() \
-                if self.toggle_feats['loc'] else []
-            menu = self.emb_model.encode(restaurant.menu).tolist() \
-                if self.toggle_feats['menu'] else []
+            if self.name_embeddings is None or self.food_type_embeddings is None or \
+           self.location_embeddings is None or self.menu_embeddings is None:
+                if os.path.exists(self.embeddings_load_path + '_name.npy') and \
+                os.path.exists(self.embeddings_load_path + '_food_type.npy') and \
+                os.path.exists(self.embeddings_load_path + '_location.npy') and \
+                os.path.exists(self.embeddings_load_path + '_menu.npy'):
+                    print("Loading saved embeddings...")
+                    self.name_embeddings = np.load(self.embeddings_load_path + '_name.npy').tolist()
+                    self.food_type_embeddings = np.load(self.embeddings_load_path + '_food_type.npy').tolist()
+                    self.location_embeddings = np.load(self.embeddings_load_path + '_location.npy').tolist()
+                    self.menu_embeddings = np.load(self.embeddings_load_path + '_menu.npy').tolist()
 
-            return name, food_type, location, menu
+                else:
+                    print("Generating and saving new embeddings...")
+                    self.name_embeddings = self.emb_model.encode(restaurant.name).tolist() \
+                        if self.toggle_feats['name'] else []
+                    self.food_type_embeddings = self.emb_model.encode(restaurant.category).tolist() \
+                        if self.toggle_feats['type'] else []
+                    self.location_embeddings = self.emb_model.encode(restaurant.location).tolist() \
+                        if self.toggle_feats['loc'] else []
+                    self.menu_embeddings = self.emb_model.encode(restaurant.menu).tolist() \
+                        if self.toggle_feats['menu'] else []
+
+                    np.save(self.embeddings_save_path + '_name.npy', self.name_embeddings)
+                    np.save(self.embeddings_save_path + '_food_type.npy', self.food_type_embeddings)
+                    np.save(self.embeddings_save_path + '_location.npy', self.location_embeddings)
+                    np.save(self.embeddings_save_path + '_menu.npy', self.menu_embeddings)
+
+            else:
+                print("Embeddings already loaded/created.")
+
+            # print(f"name embeddings: {self.name_embeddings}")
+            # print(f"food type embeddings: {self.food_type_embeddings}")
+            # print(f"location embeddings: {self.location_embeddings}")
+            # print(f"menu embeddings: {self.menu_embeddings}")
+
+            return self.name_embeddings, self.food_type_embeddings, self.location_embeddings, self.menu_embeddings
 
         def extract_bow(counted: bool = False) -> (dict, dict, dict, dict):
             """
