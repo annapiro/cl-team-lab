@@ -1,5 +1,4 @@
 # class that implements various evaluation methods for a corpus
-from Corpus import Corpus
 
 
 class Evaluator:

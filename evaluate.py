@@ -87,8 +87,10 @@ def main(model: str, file: str):
     average_correlation = sum(correlations) / len(correlations)
 
     print()
-    print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
-    print(f"Average Correlation across all folds: {average_correlation:.2f}")
+    # print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
+    # print(f"Average Correlation across all folds: {average_correlation:.2f}")
+    print(f"F1 Score: {average_f1_score:.2f}")
+    print(f"Correlation: {average_correlation:.2f}")
 
 
 if __name__ == '__main__':

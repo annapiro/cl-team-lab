@@ -27,7 +27,7 @@ def save_model(corpus: Corpus, perceptrons: list, model: str):
             pickle.dump(perceptron, f)
 
     corpus.save_feature_mapping(f"{folder_path}/map.json")
-    print(f"Model saved to {folder_path}")
+    print(f"Model saved as {folder_path}")
 
 
 def load_model(model: str) -> (Corpus, list):
