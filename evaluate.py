@@ -1,36 +1,16 @@
 import argparse
-import pickle
-from Perceptron import Perceptron
 from Corpus import Corpus
 from Evaluator import Evaluator
-from tqdm import tqdm
-from typing import Any
+from model_utils import load_model
 
 # TODO save predictions to file
-
-
-def load_model(filepath: str) -> Any:
-    """
-    Wrapper to load a model from a pickle
-    :param filepath: Path to the file
-    :return: The model stored in the pickle, as its corresponding object type
-    """
-    with open(filepath, 'rb') as f:
-        return pickle.load(f)
 
 
 def main(model: str, file: str):
     dev = Corpus.read_file(f'data/{file}')
 
-    # TODO rewrite this block for new file structure
-    # load corpus from json
-    corpus = Corpus(test_data=dev, load_mapping="models/feature_mapping.json", method='bow')
-
-    # load existing models
-    perceptrons = [load_model("models/all_feats_3_ep_perc1"),
-                   load_model("models/all_feats_3_ep_perc2"),
-                   load_model("models/all_feats_3_ep_perc3"),
-                   load_model("models/all_feats_3_ep_perc4")]
+    corpus, perceptrons = load_model(model)
+    corpus.set_test_data(dev)
 
     # Make predictions
     for restaurant in corpus.test_data:
@@ -115,7 +95,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('model', help='Model name')
     parser.add_argument('file', help='Test file')
-    # parser.add_argument('-v', '--verbose', action='store_true', help='Verbosity')
     args = parser.parse_args()
 
     main(args.model, args.file)

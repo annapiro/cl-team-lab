@@ -50,9 +50,8 @@ class Corpus:
         # set flag whether bag of words or embeddings will be used
         self.method = method
         # set the model for extracting embeddings and its fixed output length
-        if self.method == 'emb':
-            self.emb_model = SentenceTransformer('all-MiniLM-L6-v2')
-            self.emb_len = 384
+        self.emb_model = SentenceTransformer('all-MiniLM-L6-v2')
+        self.emb_len = 384
 
         # default features that will be extracted in the corpus
         self.toggle_feats = {'name': 1, 'type': 1, 'loc': 1, 'menu': 1}
@@ -101,10 +100,6 @@ class Corpus:
                 self.max_menu_count = max({x for rest in self.train_data for x in rest.features['menu'].values()})
             if self.toggle_feats['name']:
                 self.max_name_count = max({x for rest in self.train_data for x in rest.features['name'].values()})
-
-        # saves feature mappings and other settings to a json file
-        self.save_feature_mapping()
-        print("Corpus saved to last_feature_mapping.json in current directory.")
 
     @staticmethod
     def read_file(filepath: str) -> list:
@@ -309,7 +304,7 @@ class Corpus:
             print(f"Predicted Label: {instance.pred_label}")
             print("-"*30)  # prints a divider for clarity
 
-    def save_feature_mapping(self):
+    def save_feature_mapping(self, filepath: str):
         """
         Saves feature mappings and other settings to a json file
         The file is always called last_feature_mapping.json and saved in current directory
@@ -324,7 +319,7 @@ class Corpus:
             "map_names": self.map_names,
             "map_menu": self.map_menu
         }
-        with open("last_feature_mapping.json", 'w') as f:
+        with open(filepath, "w") as f:
             json.dump(feature_mapping, f, indent=4)
 
     def load_feature_mapping(self, filepath: str):
@@ -348,12 +343,3 @@ class Corpus:
         except Exception as e:
             raise Exception("Something went wrong while loading the feature mapping. Likely the JSON file "
                             "was created with an older version of Corpus and is no longer compatible") from e
-
-
-# for testing
-if __name__ == "__main__":
-    data = Corpus.read_file("data/menu_train.txt")
-    test = Corpus(data)
-    test_inst = test.train_data[10]
-    decoded = test.get_dense_features(test_inst)
-    print('done!')

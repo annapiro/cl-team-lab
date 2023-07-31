@@ -1,22 +1,11 @@
 import argparse
-import pickle
 from Perceptron import Perceptron
 from Corpus import Corpus
 from tqdm import tqdm
-from typing import Any
+from model_utils import save_model
 
 
-def save_model(model: Any, filepath: str):
-    """
-    Wrapper to save the model in a pickle
-    :param model: Model as an object
-    :param filepath: Path to the file it should be saved in
-    """
-    with open(filepath, 'wb') as f:
-        pickle.dump(model, f)
-
-
-def main(model: str, file: str, method: str, epochs: int, exclude_feats: list):
+def main(model: str, file: str, method: str, epochs: int, exclude_feats: list = None):
     # Load corpus
     data = Corpus.read_file(f'data/{file}')  # comment out this line if loading from json
 
@@ -35,10 +24,7 @@ def main(model: str, file: str, method: str, epochs: int, exclude_feats: list):
     for perceptron in tqdm(perceptrons):
         perceptron.train(train_data, epochs)
 
-    # TODO rewrite for new file structure
-    for p in perceptrons:
-        save_model(p, "out/emb_allfeats_3ep_perc" + str(p.tar_label))
-        print(f"Perceptron {p.tar_label} saved")
+    save_model(corpus, perceptrons, model)
 
 
 if __name__ == "__main__":
