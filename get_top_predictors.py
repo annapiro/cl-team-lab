@@ -7,20 +7,11 @@ Script that loads the perceptron models and corresponding feature mapping
 and outputs a text file per each feature per perceptron
 with predictors sorted by their weights, from most positive to most negative
 """
-import pickle
-from typing import Any
+import argparse
+import os
 from Perceptron import Perceptron
 from Corpus import Corpus
-
-
-def load_model(filepath: str) -> Any:
-    """
-    Wrapper to load a model from a pickle
-    :param filepath: Path to the file
-    :return: The model stored in the pickle, as its corresponding object type
-    """
-    with open(filepath, 'rb') as f:
-        return pickle.load(f)
+from model_utils import load_model
 
 
 def split_weights(c: Corpus, p: Perceptron) -> (list, list, list, list):
@@ -56,33 +47,39 @@ def sort_by_weight(map: dict, weights: list) -> list:
     return sorted(kw.items(), key=lambda item: item[1], reverse=True)
 
 
-def save_to_file(fname: str, obj: list):
-    with open(fname + ".txt", 'w') as f:
+def save_to_file(folder_path: str, fname: str, obj: list):
+    if not os.path.exists(folder_path):
+        os.makedirs(folder_path)
+    with open(f"{folder_path}/{fname}.txt", "w") as f:
         for item in obj:
             f.write(f"{item[0]} : {item[1]}\n")
 
 
-def weights_to_file(c: Corpus, p: Perceptron):
+def weights_to_file(c: Corpus, p: Perceptron, model: str):
     w_name, w_type, w_loc, w_menu = split_weights(c, p)
-    p_loc = sort_by_weight(corpus.map_locs, w_loc)
-    p_name = sort_by_weight(corpus.map_names, w_name)
-    p_type = sort_by_weight(corpus.map_types, w_type)
-    p_menu = sort_by_weight(corpus.map_menu, w_menu)
+    p_loc = sort_by_weight(c.map_locs, w_loc)
+    p_name = sort_by_weight(c.map_names, w_name)
+    p_type = sort_by_weight(c.map_types, w_type)
+    p_menu = sort_by_weight(c.map_menu, w_menu)
 
     price_cat = p.tar_label
-    save_to_file(f"p{price_cat}_loc", p_loc)
-    save_to_file(f"p{price_cat}_name", p_name)
-    save_to_file(f"p{price_cat}_type", p_type)
-    save_to_file(f"p{price_cat}_menu", p_menu)
+    folder_path = f"models/{model}/weights"
+    save_to_file(folder_path, f"perc{price_cat}_loc", p_loc)
+    save_to_file(folder_path, f"perc{price_cat}_name", p_name)
+    save_to_file(folder_path, f"perc{price_cat}_type", p_type)
+    save_to_file(folder_path, f"perc{price_cat}_menu", p_menu)
+
+
+def main(model: str):
+    corpus, perceptrons = load_model(model)
+
+    for p in perceptrons:
+        weights_to_file(corpus, p, model)
 
 
 if __name__ == "__main__":
-    corpus = Corpus(load_mapping="models/bow_allfeats_map.json")
-    # load existing models
-    perceptrons = [load_model("models/bow_allfeats_8ep_perc1"),
-                   load_model("models/bow_allfeats_8ep_perc2"),
-                   load_model("models/bow_allfeats_8ep_perc3"),
-                   load_model("models/bow_allfeats_8ep_perc4")]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('model', help='Model name')
+    args = parser.parse_args()
 
-    for p in perceptrons:
-        weights_to_file(corpus, p)
+    main(args.model)

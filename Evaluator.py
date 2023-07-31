@@ -128,22 +128,3 @@ class Evaluator:
 
         # Return Spearman's rank correlation coefficient.
         return correlation
-
-
-# For testing
-if __name__ == "__main__":
-    data = Corpus.read_file("data/menu_train.txt")
-    test_corpus = Corpus(data)
-
-    # Set predicted labels for the instances in the corpus
-    # TODO: This should be replaced  with the  actual prediction code
-    for instance in test_corpus.train_data:
-        instance.set_predicted_label(instance.gold_label)  # For now, set the predicted label to the gold label
-
-    evaluator = Evaluator(test_corpus)
-
-    f1_score = evaluator.evaluate_f1_score()
-    correlation = evaluator.evaluate_correlation()
-
-    print(f"Macro Average F1 Score: {f1_score:.2f}")
-    print(f"Spearman's Rank Correlation Coefficient: {correlation:.2f}")

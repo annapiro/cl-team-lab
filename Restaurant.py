@@ -8,6 +8,7 @@ Date: 09.07.2023
 Has attributes name, gold label, predicted label, category, location, and menu.
 """
 
+
 class Restaurant:
     def __init__(self, features: list):
         self.name = features[1]
@@ -39,9 +40,3 @@ class Restaurant:
 # set predicted labels
     def set_predicted_label(self, pred_label: int):
         self.pred_label = pred_label
-        
-
-# testing
-if __name__ == "__main__":
-    print(Restaurant.encode_label("2"))
-    print(Restaurant.encode_label("$$$"))
