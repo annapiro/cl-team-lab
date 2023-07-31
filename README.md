@@ -10,6 +10,8 @@ The data should be saved in the folder root/data in the txt format and follow th
 
 Two pre-trained example models are provided in this repository as a starting point.
 
+Note: The example models were not trained on the full dataset, so their performance might differ from the results outlined in the report.
+
 # Training
 
 Train the model by running the following command:

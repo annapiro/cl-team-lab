@@ -3,8 +3,6 @@ from Corpus import Corpus
 from Evaluator import Evaluator
 from model_utils import load_model
 
-# TODO save predictions to file
-
 
 def main(model: str, file: str):
     dev = Corpus.read_file(f'data/{file}')
@@ -21,40 +19,8 @@ def main(model: str, file: str):
         # Set the predicted label
         restaurant.set_predicted_label(predicted_class)
 
-    # Cross-validation # TODO (maybe) move to Evaluator
-    # K = 5  # number of splits for cross-validation
-    # fold_size = len(data) // K
     f1_scores = []
     correlations = []
-    """
-    random.shuffle(data)
-
-    for i in range(K):
-        dev = data[i*fold_size: (i+1)*fold_size]
-        train = data[:i*fold_size] + data[(i+1)*fold_size:]
-        corpus = Corpus(train, exclude_feats=['name'])
-        corpus.set_test_data(dev)
-
-        # Get the number of features
-        num_features = corpus.num_feats
-
-        # Initialize perceptron for each class
-        perceptrons = [Perceptron(num_features, i) for i in range(1, 5)]  # Assuming 4 price categories
-
-        # Train perceptrons
-        train_data = [(corpus.get_dense_features(restaurant), restaurant.gold_label) for restaurant in corpus.train_data]
-        for perceptron in tqdm(perceptrons):
-            perceptron.train(train_data, epochs)
-
-        # Make predictions
-        for restaurant in corpus.test_data:
-            dense_features = corpus.get_dense_features(restaurant)
-            predictions = [perceptron.predict(dense_features) for perceptron in perceptrons]
-            # Get the predicted class (1-indexed)
-            predicted_class = predictions.index(max(predictions)) + 1
-            # Set the predicted label
-            restaurant.set_predicted_label(predicted_class)
-    """
 
     # Evaluate perceptrons
     y_true = []
@@ -87,8 +53,6 @@ def main(model: str, file: str):
     average_correlation = sum(correlations) / len(correlations)
 
     print()
-    # print(f"Average F1 Score across all folds: {average_f1_score:.2f}")
-    # print(f"Average Correlation across all folds: {average_correlation:.2f}")
     print(f"F1 Score: {average_f1_score:.2f}")
     print(f"Correlation: {average_correlation:.2f}")
 

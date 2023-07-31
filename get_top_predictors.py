@@ -16,9 +16,8 @@ from model_utils import load_model
 
 def split_weights(c: Corpus, p: Perceptron) -> (list, list, list, list):
     """
-    TODO
-    :param c:
-    :param p:
+    :param c: Corpus
+    :param p: Perceptron model
     :return: feature weights in order: name, type, location, menu
     """
     # get the length of each feature in the corpus
@@ -38,9 +37,6 @@ def split_weights(c: Corpus, p: Perceptron) -> (list, list, list, list):
 def sort_by_weight(map: dict, weights: list) -> list:
     """
     Sorts list of tokens by weights in descending order
-    :param map:
-    :param weights:
-    :return: TODO
     """
     # kw = {key:weight for key in map.keys() for weight in weights}
     kw = dict(zip(map.keys(), weights))
