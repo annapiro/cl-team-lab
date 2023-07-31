@@ -6,7 +6,9 @@ This classifier was developed to explore the role of different features as predi
 
 The required modules are listed in `requirements.txt`
 
-The data should be saved in the folder root/data in the txt format and follow the same structure as the dataset by Jurafsky et al. 
+The data should be saved in the folder root/data in the txt format and follow the same structure as the dataset by Jurafsky et al.
+
+Two pre-trained example models are provided in this repository as a starting point.
 
 # Training
 
